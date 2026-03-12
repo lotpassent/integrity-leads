@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registrar Lead — Integrity Recruitment Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal-deep:   #0C2022;
+      --teal-mid:    #1D4D4F;
+      --teal-accent: #2A6B6D;
+      --amber:       #D4832A;
+      --amber-light: #E8A455;
+      --cream:       #F4F1EC;
+      --cream-dim:   rgba(196,187,174,0.55);
+      --cream-faint: rgba(196,187,174,0.25);
+      --white:       #FAFAF8;
+      --border:      rgba(42,107,109,0.3);
+      --border-focus:rgba(212,131,42,0.7);
+      --border-amb:  rgba(212,131,42,0.2);
+      --input-bg:    rgba(15,40,42,0.6);
+      --input-hover: rgba(29,77,79,0.5);
+      --success:     #4CAF82;
+      --error:       #E07777;
+    }
+
+    html, body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--teal-deep);
+      color: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 110% -10%, rgba(42,107,109,0.22) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at -10% 110%, rgba(212,131,42,0.07) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(42,107,109,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(42,107,109,0.05) 1px, transparent 1px);
+      background-size: 52px 52px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      position: fixed; top: 0; left: 0; right: 0; height: 2px;
+      background: rgba(42,107,109,0.2); z-index: 200;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--amber), var(--amber-light));
+      transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 0 8px rgba(212,131,42,0.5);
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      padding: 1.25rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(42,107,109,0.2);
+      backdrop-filter: blur(10px);
+    }
+    .logo-area { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-mark { width: 34px; height: 34px; }
+    .logo-name { font-weight: 600; font-size: 0.9rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream); }
+    .logo-sub  { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber); margin-top: 1px; }
+
+    .step-pill {
+      font-size: 0.7rem; letter-spacing: 0.08em;
+      color: var(--cream-dim);
+      background: rgba(29,77,79,0.4);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 16px;
+      transition: all 0.3s;
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative; z-index: 10;
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* ── STEPS ── */
+    .step { display: none; max-width: 580px; width: 100%; }
+    .step.active {
+      display: block;
+      animation: stepIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--amber); margin-bottom: 1rem;
+    }
+    .step-badge::before {
+      content: ''; display: inline-block;
+      width: 24px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--amber));
+    }
+
+    .step-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+      font-weight: 500; line-height: 1.1;
+      color: var(--white); margin-bottom: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+    .step-title em { font-style: italic; color: var(--amber-light); }
+
+    .step-hint {
+      font-size: 0.875rem; color: var(--cream-dim);
+      font-weight: 300; line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+
+    /* ── CONSULTANT GRID ── */
+    .consultant-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem; margin-bottom: 1rem;
+    }
+    @media(max-width:480px) { .consultant-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .cons-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 0.75rem;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+      display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+      color: var(--cream); font-family: 'Outfit', sans-serif;
+      position: relative; overflow: hidden;
+    }
+    .cons-btn::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .cons-btn:hover { border-color: rgba(212,131,42,0.4); background: var(--input-hover); transform: translateY(-2px); }
+    .cons-btn:hover::before { opacity: 0.6; }
+    .cons-btn.selected {
+      border-color: var(--amber);
+      background: rgba(212,131,42,0.08);
+      box-shadow: 0 0 0 1px rgba(212,131,42,0.15), 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .cons-btn.selected::before { opacity: 1; }
+    .cons-btn--other { border-style: dashed; }
+
+    .cons-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(212,131,42,0.12);
+      border: 1.5px solid rgba(212,131,42,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+      color: var(--amber-light); letter-spacing: 0.05em;
+      transition: all 0.25s;
+    }
+    .cons-btn.selected .cons-avatar {
+      background: rgba(212,131,42,0.22); border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(212,131,42,0.1);
+    }
+    .cons-name { font-size: 0.75rem; font-weight: 500; text-align: center; line-height: 1.3; }
+
+    /* ── SONDAGEM ── */
+    .sondagem-card {
+      background: rgba(212,131,42,0.05);
+      border: 1px solid rgba(212,131,42,0.2);
+      border-radius: 16px;
+      padding: 1.5rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .sondagem-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .sondagem-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(212,131,42,0.12);
+      border: 1px solid rgba(212,131,42,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0;
+    }
+    .sondagem-title-text {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.15em; color: var(--amber);
+      font-weight: 600;
+    }
+    .sondagem-subtitle { font-size: 0.72rem; color: var(--cream-dim); margin-top: 1px; }
+
+    .sondagem-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      font-size: 0.85rem; color: rgba(244,241,236,0.82);
+      line-height: 1.6; padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(42,107,109,0.15);
+    }
+    .sondagem-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .sondagem-num {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(212,131,42,0.12);
+      border: 1px solid rgba(212,131,42,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 700; color: var(--amber);
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* ── CAMPOS ── */
+    .field {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .field-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.68rem; font-weight: 600;
+      color: rgba(196,187,174,0.45);
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .field-label-icon {
+      width: 18px; height: 18px; border-radius: 5px;
+      background: rgba(212,131,42,0.1);
+      border: 1px solid rgba(212,131,42,0.2);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; flex-shrink: 0;
+    }
+    .field-label .req { color: var(--amber); margin-left: 2px; }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      color: var(--cream);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+      -webkit-appearance: none;
+      line-height: 1.5;
+    }
+    .field select option { background: #162829; color: var(--cream); }
+
+    .field input:hover,
+    .field select:hover,
+    .field textarea:hover {
+      border-color: rgba(42,107,109,0.55);
+      background: var(--input-hover);
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--amber);
+      background: rgba(29,77,79,0.45);
+      box-shadow: 0 0 0 3px rgba(212,131,42,0.08), 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .field textarea {
+      resize: vertical; min-height: 110px;
+      line-height: 1.65;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder { color: rgba(196,187,174,0.2); }
+
+    /* Select arrow personalizada */
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4832A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+
+    /* Indicador de preenchimento */
+    .field input:not(:placeholder-shown):not(:focus),
+    .field select:not([value=""]):not(:focus),
+    .field textarea:not(:placeholder-shown):not(:focus) {
+      border-color: rgba(76,175,130,0.35);
+    }
+
+    .field-error {
+      font-size: 0.74rem; color: var(--error);
+      margin-top: 0.4rem;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .field-error::before { content: '!'; font-weight: 700; }
+
+    .field-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media(max-width:480px) { .field-row { grid-template-columns: 1fr; } }
+
+    /* Contador de caracteres em textareas */
+    .field-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 0.4rem;
+    }
+    .char-count { font-size: 0.68rem; color: var(--cream-faint); }
+
+    /* Dica de campo */
+    .field-tip {
+      font-size: 0.73rem; color: rgba(212,131,42,0.5);
+      margin-top: 0.35rem; display: flex; align-items: center; gap: 4px;
+    }
+    .field-tip::before { content: '💡'; font-size: 0.7rem; }
+
+    /* ── URGÊNCIA ── */
+    .urgencia-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .urg-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.1rem;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+      text-align: left; color: var(--cream);
+      font-family: 'Outfit', sans-serif;
+      position: relative; overflow: hidden;
+    }
+    .urg-btn:hover { border-color: rgba(212,131,42,0.35); background: var(--input-hover); transform: translateY(-2px); }
+    .urg-btn.selected { border-color: var(--amber); background: rgba(212,131,42,0.07); box-shadow: 0 0 0 1px rgba(212,131,42,0.12); }
+
+    .urg-indicator {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block; margin-bottom: 0.75rem;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .urg-indicator.baixa   { background: #4CAF82; color: #4CAF82; }
+    .urg-indicator.media   { background: #F5C842; color: #F5C842; }
+    .urg-indicator.alta    { background: #E8843A; color: #E8843A; }
+    .urg-indicator.critica { background: #E05555; color: #E05555; }
+
+    .urg-label { font-size: 0.95rem; font-weight: 600; margin-bottom: 3px; }
+    .urg-desc  { font-size: 0.74rem; color: var(--cream-dim); line-height: 1.45; }
+
+    .urg-check {
+      position: absolute; top: 0.7rem; right: 0.7rem;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--amber); border: 1.5px solid var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: var(--teal-deep); font-weight: 700;
+      opacity: 0; transform: scale(0.5);
+      transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    .urg-btn.selected .urg-check { opacity: 1; transform: scale(1); }
+
+    /* ── BOTÕES ── */
+    .nav-row { display: flex; gap: 0.75rem; margin-top: 2.2rem; }
+
+    .btn {
+      padding: 0.95rem 2rem;
+      border-radius: 12px; border: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: all 0.22s;
+      letter-spacing: 0.04em;
+    }
+    .btn-primary {
+      background: var(--amber); color: #0C2022; flex: 1;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(212,131,42,0.25);
+    }
+    .btn-primary:hover {
+      background: var(--amber-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(212,131,42,0.35);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-ghost {
+      background: transparent; color: var(--cream-dim);
+      border: 1px solid rgba(42,107,109,0.4);
+    }
+    .btn-ghost:hover { color: var(--cream); border-color: rgba(42,107,109,0.7); background: rgba(29,77,79,0.2); }
+
+    /* ── SUCESSO ── */
+    #step-success { text-align: center; }
+    .success-circle {
+      width: 84px; height: 84px; border-radius: 50%;
+      border: 1.5px solid var(--amber);
+      background: rgba(212,131,42,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; margin: 0 auto 2rem;
+      animation: popIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+      box-shadow: 0 0 40px rgba(212,131,42,0.15);
+    }
+    @keyframes popIn { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem; font-weight: 500; margin-bottom: 0.5rem;
+    }
+    .success-sub { color: var(--cream-dim); font-weight: 300; line-height: 1.65; margin-bottom: 2rem; }
+    .success-card {
+      background: var(--input-bg);
+      border: 1px solid var(--border-amb);
+      border-radius: 16px; padding: 1.5rem;
+      text-align: left; margin-bottom: 2rem;
+    }
+    .sc-item { display: flex; align-items: flex-start; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid rgba(42,107,109,0.12); }
+    .sc-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .sc-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--amber); min-width: 80px; padding-top: 2px; }
+    .sc-value { font-size: 0.92rem; font-weight: 500; }
+
+    /* ── ERRORS ── */
+    .global-error {
+      background: rgba(224,119,119,0.08);
+      border: 1px solid rgba(224,119,119,0.3);
+      border-radius: 10px; padding: 0.9rem 1.1rem;
+      font-size: 0.82rem; color: var(--error); margin-top: 1rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .global-error::before { content: '⚠'; font-size: 1rem; }
+
+    /* ── LOADING ── */
+    .loading-state { text-align: center; padding: 4rem 1rem; color: var(--cream-dim); }
+    .loading-dots { display: flex; gap: 6px; justify-content: center; margin-top: 1rem; }
+    .loading-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--amber); opacity: 0.3;
+      animation: ldot 1.4s ease-in-out infinite;
+    }
+    .loading-dot:nth-child(2) { animation-delay: .2s; }
+    .loading-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes ldot { 0%,80%,100%{opacity:.3;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
+
+    @media(max-width:560px) {
+      header { padding: 1rem 1.25rem; }
+      main { padding: 1.5rem 1rem; align-items: flex-start; padding-top: 2.5rem; }
+      .urgencia-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<header>
+  <div class="logo-area">
+    <svg class="logo-mark" viewBox="0 0 34 34" fill="none">
+      <rect width="34" height="34" rx="5" fill="#1D4D4F"/>
+      <path d="M4 4 L19 4 L30 15 L30 30 L4 30 Z" fill="#D4832A" opacity="0.88"/>
+      <path d="M4 4 L19 4 L30 15 L19 15 L4 4 Z" fill="#1D4D4F"/>
+      <circle cx="14" cy="14" r="3.5" fill="#1D4D4F"/>
+      <circle cx="14" cy="14" r="1.8" fill="#D4832A"/>
+    </svg>
+    <div>
+      <div class="logo-name">Integrity</div>
+      <div class="logo-sub">Recruitment Group</div>
+    </div>
+  </div>
+  <div class="step-pill" id="stepPill">Carregando...</div>
+</header>
+
+<main id="mainArea">
+  <div class="loading-state">
+    <div style="font-size:0.88rem;letter-spacing:0.05em">Preparando formulário</div>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIGURAÇÃO
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CONSULTORES_FIXOS = [
+  { nome: 'Camilla Moriya',   iniciais: 'CM' },
+  { nome: 'Cláudio Ferreira', iniciais: 'CF' },
+  { nome: 'Camila Benedetti', iniciais: 'CB' },
+  { nome: 'Paula Vieira',     iniciais: 'PV' },
+  { nome: 'Luís Hartmann',    iniciais: 'LH' },
+  { nome: 'Ana Delibi',       iniciais: 'AD' },
+];
+
+const PREFIXO_SONDAGEM = 'sondagem_';
+const CAMPO_CONSULTOR  = 'consultor_nome';
+
+// Ícones e dicas por campo
+const CAMPO_META = {
+  empresa_nome:          { icon: '🏢', tip: 'Ex: TechBank S.A., Grupo Meridian' },
+  empresa_setor:         { icon: '🏭', tip: 'Ex: Financeiro, Tecnologia, Saúde' },
+  empresa_porte:         { icon: '📏', tip: '' },
+  contato_nome:          { icon: '👤', tip: 'Nome do gestor ou responsável pelas contratações' },
+  contato_cargo:         { icon: '💼', tip: 'Ex: Gerente de RH, Diretor de Pessoas' },
+  contato_email:         { icon: '✉️', tip: '' },
+  contato_telefone:      { icon: '📞', tip: '' },
+  cargo_em_aberto:       { icon: '🎯', tip: 'Ex: Analista de Dados Sênior, CFO, Desenvolvedor Full Stack' },
+  nivel_cargo:           { icon: '📊', tip: '' },
+  quantidade_vagas:      { icon: '#',  tip: 'Quantas posições estão abertas' },
+  urgencia:              { icon: '⚡', tip: '' },
+  contexto_entrevistado: { icon: '💬', tip: 'Descreva livremente — qualquer detalhe pode ser decisivo' },
+  observacoes:           { icon: '📝', tip: 'Horário de contato, histórico com a empresa, pontos de atenção' },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTADO
+// ─────────────────────────────────────────────────────────────────────────────
+
+let steps = [];
+let curIdx = 0;
+let consultorSelecionado = '';
+let urgenciaSelecionada  = '';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function init() {
+  let perguntas = [];
+  try {
+    const res = await fetch('/api/perguntas');
+    const data = await res.json();
+    if (Array.isArray(data)) perguntas = data;
+  } catch (e) {
+    console.warn('API indisponível', e);
+  }
+
+  const sondagem   = perguntas.filter(p => p.campo.startsWith(PREFIXO_SONDAGEM));
+  const formulario = perguntas.filter(p => !p.campo.startsWith(PREFIXO_SONDAGEM) && p.campo !== CAMPO_CONSULTOR);
+
+  steps = [];
+  steps.push({ tipo: 'identificacao' });
+  steps.push({ tipo: 'sondagem', perguntas: sondagem });
+
+  const grupos = agruparPerguntas(formulario);
+  grupos.forEach(g => steps.push({ tipo: 'perguntas', perguntas: g }));
+  steps.push({ tipo: 'revisao' });
+
+  renderFormulario();
+  irPara(0);
+}
+
+function agruparPerguntas(perguntas) {
+  const grupos = {}; const ordem = [];
+  perguntas.forEach(p => {
+    let grupo;
+    if (p.campo.startsWith('empresa_'))  grupo = '__empresa__';
+    else if (p.campo.startsWith('contato_')) grupo = '__contato__';
+    else grupo = `__solo_${p.campo}__`;
+    if (!grupos[grupo]) { grupos[grupo] = []; ordem.push(grupo); }
+    grupos[grupo].push(p);
+  });
+  return ordem.map(k => grupos[k]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderFormulario() {
+  const total = steps.length - 1;
+  let html = '';
+
+  steps.forEach((step, idx) => {
+    const num = idx + 1;
+    html += `<div class="step${idx === 0 ? ' active' : ''}" id="step-${idx}">`;
+    if      (step.tipo === 'identificacao') html += renderIdentificacao(num, total);
+    else if (step.tipo === 'sondagem')      html += renderSondagem(num, total, step.perguntas);
+    else if (step.tipo === 'perguntas')     html += renderGrupo(num, total, step.perguntas, idx);
+    else if (step.tipo === 'revisao')       html += renderRevisao(num, total);
+    html += '</div>';
+  });
+
+  html += `
+  <div class="step" id="step-success">
+    <div class="success-circle">✓</div>
+    <h2 class="success-title">Lead Registrado!</h2>
+    <p class="success-sub">A oportunidade já está visível no painel executivo<br/>e será tratada pela equipe comercial.</p>
+    <div class="success-card" id="successCard"></div>
+    <div class="nav-row" style="margin-top:0">
+      <button class="btn btn-ghost" style="flex:1" onclick="window.location.href='/'">← Início</button>
+      <button class="btn btn-primary" style="flex:1" onclick="location.reload()">+ Registrar outro</button>
+    </div>
+  </div>`;
+
+  document.getElementById('mainArea').innerHTML = html;
+}
+
+// ── Títulos e hints por grupo ──────────────────────────────────────────────
+
+const GRUPO_META = {
+  __empresa__: {
+    badge: 'A Empresa',
+    titulo: 'Qual empresa<br/>foi identificada?',
+    hint: 'Preencha o que souber. Cada detalhe agiliza a abordagem comercial.',
+  },
+  __contato__: {
+    badge: 'Contato na Empresa',
+    titulo: 'Há um contato<br/>identificado?',
+    hint: 'O candidato geralmente menciona o gestor ou o responsável pelas contratações.',
+  },
+  __solo_cargo_em_aberto__: { badge: 'A Oportunidade', titulo: 'Qual vaga está<br/>em aberto?', hint: 'Descreva o cargo mencionado pelo candidato na entrevista.' },
+  __solo_nivel_cargo__:     { badge: 'A Oportunidade' },
+  __solo_quantidade_vagas__:{ badge: 'A Oportunidade' },
+  __solo_urgencia__:        { badge: 'Urgência', titulo: 'Qual a urgência<br/>desta oportunidade?', hint: 'Avalie com base no que o candidato transmitiu sobre a situação da empresa.' },
+  __solo_contexto_entrevistado__: { badge: 'Contexto', titulo: 'O que o candidato<br/>revelou?', hint: 'Informações qualitativas são ouro. Seja específico — qualquer detalhe pode ser decisivo.' },
+  __solo_observacoes__: { badge: 'Observações' },
+};
+
+function getGrupoKey(perguntas) {
+  const p0 = perguntas[0].campo;
+  if (p0.startsWith('empresa_'))  return '__empresa__';
+  if (p0.startsWith('contato_'))  return '__contato__';
+  return `__solo_${p0}__`;
+}
+
+function renderIdentificacao(num, total) {
+  const btns = CONSULTORES_FIXOS.map(c => `
+    <button class="cons-btn" data-name="${c.nome}" onclick="selecionarConsultor(this)">
+      <div class="cons-avatar">${c.iniciais}</div>
+      <div class="cons-name">${c.nome}</div>
+    </button>`).join('');
+
+  return `
+    <div class="step-badge">Etapa ${pad(num)} de ${total} — Identificação</div>
+    <h2 class="step-title">Quem está<br/>registrando este lead?</h2>
+    <p class="step-hint">Selecione seu nome para vincular o lead à sua performance semanal.</p>
+    <div class="consultant-grid">
+      ${btns}
+      <button class="cons-btn cons-btn--other" data-name="outro" onclick="selecionarConsultor(this)">
+        <div class="cons-avatar" style="font-size:1rem">✎</div>
+        <div class="cons-name">Outra pessoa</div>
+      </button>
+    </div>
+    <div class="field" id="outroField" style="display:none">
+      <div class="field-label"><span class="field-label-icon">👤</span> Seu nome completo <span class="req">*</span></div>
+      <input type="text" id="consultor_outro" placeholder="Digite seu nome completo..."/>
+    </div>
+    <div class="field-error" id="err-consultor" style="display:none"></div>
+    <div class="nav-row">
+      <button class="btn btn-primary" onclick="avancar()">Continuar →</button>
+    </div>`;
+}
+
+function renderSondagem(num, total, perguntas) {
+  const FALLBACK = [
+    'Como está o volume de contratações no seu departamento atualmente?',
+    'Vocês têm tido dificuldade em fechar alguma posição específica?',
+    'Existe alguma área da empresa em expansão que precisará contratar em breve?',
+    'Como funciona o processo de recrutamento na empresa? Usam consultoria externa?',
+    'Você saberia indicar quem é o responsável pelas contratações lá?',
+  ];
+
+  const lista = (perguntas.length > 0 ? perguntas : FALLBACK.map((q,i) => ({ label: q, id: i })))
+    .map((p, i) => `
+      <div class="sondagem-item">
+        <div class="sondagem-num">${i + 1}</div>
+        <div>${p.label}</div>
+      </div>`).join('');
+
+  return `
+    <div class="step-badge">Etapa ${pad(num)} de ${total} — Sondagem</div>
+    <h2 class="step-title">Roteiro de<br/><em>sondagem</em></h2>
+    <p class="step-hint">Use estas perguntas ao final da entrevista para detectar oportunidades comerciais.</p>
+    <div class="sondagem-card">
+      <div class="sondagem-header">
+        <div class="sondagem-icon">💬</div>
+        <div>
+          <div class="sondagem-title-text">Perguntas sugeridas</div>
+          <div class="sondagem-subtitle">Adapte conforme o contexto da conversa</div>
+        </div>
+      </div>
+      ${lista}
+    </div>
+    <p class="step-hint" style="font-size:.82rem;margin-bottom:0">
+      Se o candidato revelou uma oportunidade, clique em <strong style="color:var(--amber-light);font-weight:600">Continuar</strong>.
+    </p>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="voltar()">← Voltar</button>
+      <button class="btn btn-primary" onclick="avancar()">Identificou oportunidade →</button>
+    </div>`;
+}
+
+function renderGrupo(num, total, perguntas, stepIdx) {
+  const key  = getGrupoKey(perguntas);
+  const meta = GRUPO_META[key] || {};
+  const badge = meta.badge  || 'Informações';
+  const titulo= meta.titulo || perguntas[0].label;
+  const hint  = meta.hint   || 'Preencha com base no que o candidato relatou na entrevista.';
+
+  const campos = perguntas.map(p => renderCampo(p)).join('');
+
+  return `
+    <div class="step-badge">Etapa ${pad(num)} de ${total} — ${badge}</div>
+    <h2 class="step-title">${titulo}</h2>
+    <p class="step-hint">${hint}</p>
+    ${campos}
+    <div class="field-error" id="err-step-${stepIdx}" style="display:none"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="voltar()">← Voltar</button>
+      <button class="btn btn-primary" onclick="avancar()">Continuar →</button>
+    </div>`;
+}
+
+function renderCampo(p) {
+  const req  = p.obrigatorio ? '<span class="req">*</span>' : '';
+  const meta = CAMPO_META[p.campo] || {};
+  const icon = meta.icon || '✏️';
+  const tip  = meta.tip  || '';
+
+  const labelHtml = `
+    <div class="field-label">
+      <span class="field-label-icon">${icon}</span>
+      ${p.label} ${req}
+    </div>`;
+
+  const tipHtml = tip ? `<div class="field-tip">${tip}</div>` : '';
+
+  // Urgência: botões visuais
+  if (p.campo === 'urgencia') {
+    return `
+      <div class="urgencia-grid">
+        <button class="urg-btn" data-value="baixa"   onclick="selecionarUrgencia(this)">
+          <div class="urg-check">✓</div>
+          <div class="urg-indicator baixa"></div>
+          <div class="urg-label">Baixa</div>
+          <div class="urg-desc">Posição em planejamento, sem pressa imediata</div>
+        </button>
+        <button class="urg-btn" data-value="media"   onclick="selecionarUrgencia(this)">
+          <div class="urg-check">✓</div>
+          <div class="urg-indicator media"></div>
+          <div class="urg-label">Média</div>
+          <div class="urg-desc">Processo em andamento, avaliando opções</div>
+        </button>
+        <button class="urg-btn" data-value="alta"    onclick="selecionarUrgencia(this)">
+          <div class="urg-check">✓</div>
+          <div class="urg-indicator alta"></div>
+          <div class="urg-label">Alta</div>
+          <div class="urg-desc">Posição descoberta, decisão próxima</div>
+        </button>
+        <button class="urg-btn" data-value="critica" onclick="selecionarUrgencia(this)">
+          <div class="urg-check">✓</div>
+          <div class="urg-indicator critica"></div>
+          <div class="urg-label">Crítica</div>
+          <div class="urg-desc">Urgência máxima — contatar hoje</div>
+        </button>
+      </div>`;
+  }
+
+  // Select
+  if (p.tipo === 'select') {
+    const opcoes = Array.isArray(p.opcoes) ? p.opcoes : [];
+    const labelsFriendly = {
+      pequena: 'Pequena', media: 'Média', grande: 'Grande', enterprise: 'Enterprise / Corporação',
+      junior: 'Júnior / Trainee', pleno: 'Pleno', senior: 'Sênior', especialista: 'Especialista',
+      gerencia: 'Gerência', diretoria: 'Diretoria', 'c-level': 'C-Level / Executivo',
+      baixa: 'Baixa', alta: 'Alta', critica: 'Crítica',
+    };
+    const opts = opcoes.map(o => `<option value="${o}">${labelsFriendly[o] || o}</option>`).join('');
+    return `<div class="field">
+      ${labelHtml}
+      <div class="field-wrap">
+        <select id="campo_${p.campo}" data-campo="${p.campo}" data-obrigatorio="${p.obrigatorio}">
+          <option value="">Selecione uma opção...</option>${opts}
+        </select>
+      </div>
+      ${tipHtml}
+    </div>`;
+  }
+
+  if (p.tipo === 'textarea') {
+    return `<div class="field">
+      ${labelHtml}
+      <div class="field-wrap">
+        <textarea id="campo_${p.campo}" data-campo="${p.campo}" data-obrigatorio="${p.obrigatorio}"
+          placeholder="Digite aqui..."
+          oninput="atualizarContador(this)"></textarea>
+      </div>
+      <div class="field-footer">
+        ${tipHtml || '<span></span>'}
+        <span class="char-count" id="cnt_${p.campo}">0 caracteres</span>
+      </div>
+    </div>`;
+  }
+
+  if (p.tipo === 'number') {
+    return `<div class="field">
+      ${labelHtml}
+      <div class="field-wrap">
+        <input type="number" id="campo_${p.campo}" data-campo="${p.campo}" data-obrigatorio="${p.obrigatorio}" placeholder="0" min="0"/>
+      </div>
+      ${tipHtml}
+    </div>`;
+  }
+
+  if (p.tipo === 'boolean') {
+    return `<div class="field">
+      ${labelHtml}
+      <div class="field-wrap">
+        <select id="campo_${p.campo}" data-campo="${p.campo}" data-obrigatorio="${p.obrigatorio}">
+          <option value="">Selecione...</option>
+          <option value="sim">✓ Sim</option>
+          <option value="nao">✗ Não</option>
+        </select>
+      </div>
+      ${tipHtml}
+    </div>`;
+  }
+
+  // Default: text
+  return `<div class="field">
+    ${labelHtml}
+    <div class="field-wrap">
+      <input type="text" id="campo_${p.campo}" data-campo="${p.campo}" data-obrigatorio="${p.obrigatorio}" placeholder="Digite aqui..."/>
+    </div>
+    ${tipHtml}
+  </div>`;
+}
+
+function renderRevisao(num, total) {
+  return `
+    <div class="step-badge">Etapa ${pad(num)} de ${total} — Confirmar</div>
+    <h2 class="step-title">Tudo certo?<br/><em>Registre o lead.</em></h2>
+    <p class="step-hint">O lead ficará disponível no painel executivo imediatamente após o envio.</p>
+    <div id="globalError"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="voltar()">← Voltar</button>
+      <button class="btn btn-primary" id="btnSubmit" onclick="enviar()">Registrar Lead ✓</button>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVEGAÇÃO
+// ─────────────────────────────────────────────────────────────────────────────
+
+function irPara(idx) {
+  const prev = document.getElementById(`step-${curIdx}`);
+  if (prev) prev.classList.remove('active');
+  curIdx = idx;
+  const el = document.getElementById(`step-${idx}`);
+  if (!el) return;
+  el.classList.add('active');
+  el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
+
+  const total = steps.length - 1;
+  const pct   = Math.round((idx / steps.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stepPill').textContent = `Etapa ${idx + 1} de ${total}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function avancar() { if (validar()) irPara(curIdx + 1); }
+function voltar()  { if (curIdx > 0) irPara(curIdx - 1); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VALIDAÇÃO
+// ─────────────────────────────────────────────────────────────────────────────
+
+function mostrarErro(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'flex' : 'none';
+}
+
+function validar() {
+  const step = steps[curIdx];
+  if (step.tipo === 'identificacao') {
+    if (!consultorSelecionado) { mostrarErro('err-consultor', 'Selecione seu nome.'); return false; }
+    if (consultorSelecionado === 'outro') {
+      const v = document.getElementById('consultor_outro')?.value.trim();
+      if (!v || v.length < 2) { mostrarErro('err-consultor', 'Digite seu nome completo.'); return false; }
+    }
+    mostrarErro('err-consultor', ''); return true;
+  }
+  if (step.tipo === 'sondagem') return true;
+  if (step.tipo === 'perguntas') {
+    const errId = `err-step-${curIdx}`;
+    for (const p of step.perguntas) {
+      if (!p.obrigatorio) continue;
+      if (p.campo === 'urgencia') {
+        if (!urgenciaSelecionada) { mostrarErro(errId, 'Selecione o grau de urgência.'); return false; }
+        continue;
+      }
+      const el = document.getElementById(`campo_${p.campo}`);
+      if (el && !el.value.trim()) {
+        mostrarErro(errId, `Preencha: ${p.label}`);
+        el.focus(); return false;
+      }
+    }
+    mostrarErro(errId, ''); return true;
+  }
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERAÇÕES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function selecionarConsultor(btn) {
+  document.querySelectorAll('.cons-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  consultorSelecionado = btn.dataset.name;
+  const outroField = document.getElementById('outroField');
+  if (consultorSelecionado === 'outro') {
+    outroField.style.display = 'block';
+    document.getElementById('consultor_outro')?.focus();
+  } else {
+    if (outroField) outroField.style.display = 'none';
+  }
+  mostrarErro('err-consultor', '');
+}
+
+function selecionarUrgencia(btn) {
+  document.querySelectorAll('.urg-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  urgenciaSelecionada = btn.dataset.value;
+}
+
+function atualizarContador(el) {
+  const cnt = document.getElementById(`cnt_${el.id.replace('campo_','')}`);
+  if (cnt) cnt.textContent = el.value.length + ' caracteres';
+}
+
+function getConsultorNome() {
+  return consultorSelecionado === 'outro'
+    ? (document.getElementById('consultor_outro')?.value.trim() || '')
+    : consultorSelecionado;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENVIO
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CAMPOS_DIRETOS = new Set([
+  'empresa_nome','empresa_setor','empresa_porte',
+  'contato_nome','contato_cargo','contato_telefone','contato_email',
+  'cargo_em_aberto','nivel_cargo','quantidade_vagas','urgencia',
+  'contexto_entrevistado','observacoes',
+]);
+
+async function enviar() {
+  const btn = document.getElementById('btnSubmit');
+  const errDiv = document.getElementById('globalError');
+  if (errDiv) errDiv.innerHTML = '';
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  const direto = { consultor_nome: getConsultorNome() };
+  const respostas_extras = [];
+
+  steps.forEach(step => {
+    if (step.tipo !== 'perguntas') return;
+    step.perguntas.forEach(p => {
+      let valor = p.campo === 'urgencia' ? urgenciaSelecionada
+        : (document.getElementById(`campo_${p.campo}`)?.value.trim() || '');
+      if (CAMPOS_DIRETOS.has(p.campo)) direto[p.campo] = valor;
+      else respostas_extras.push({ campo: p.campo, label: p.label, valor });
+    });
+  });
+
+  if (!direto.empresa_nome)    { mostrarErroEnvio('Nome da empresa é obrigatório.', btn); return; }
+  if (!direto.cargo_em_aberto) { mostrarErroEnvio('O cargo em aberto é obrigatório.', btn); return; }
+  if (!direto.urgencia)        { mostrarErroEnvio('Selecione a urgência da oportunidade.', btn); return; }
+
+  try {
+    const res  = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...direto, respostas_extras }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById(`step-${curIdx}`)?.classList.remove('active');
+      document.getElementById('step-success')?.classList.add('active');
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('stepPill').textContent = 'Concluído ✓';
+
+      const emoUrg = { baixa:'🟢', media:'🟡', alta:'🟠', critica:'🔴' };
+      const labelUrg = { baixa:'Baixa', media:'Média', alta:'Alta', critica:'Crítica' };
+      document.getElementById('successCard').innerHTML = `
+        <div class="sc-item"><div class="sc-label">Consultor</div><div class="sc-value">${direto.consultor_nome}</div></div>
+        <div class="sc-item"><div class="sc-label">Empresa</div><div class="sc-value">${direto.empresa_nome}</div></div>
+        ${direto.cargo_em_aberto ? `<div class="sc-item"><div class="sc-label">Vaga</div><div class="sc-value">${direto.cargo_em_aberto}</div></div>` : ''}
+        <div class="sc-item"><div class="sc-label">Urgência</div><div class="sc-value">${emoUrg[direto.urgencia]||''} ${labelUrg[direto.urgencia]||direto.urgencia}</div></div>
+        <div class="sc-item"><div class="sc-label">Lead ID</div><div class="sc-value">#${data.lead.id}</div></div>`;
+    } else {
+      mostrarErroEnvio(data.message || 'Erro ao registrar lead.', btn);
+    }
+  } catch {
+    mostrarErroEnvio('Erro de conexão. Verifique se o servidor está rodando.', btn);
+  }
+}
+
+function mostrarErroEnvio(msg, btn) {
+  const errDiv = document.getElementById('globalError');
+  if (errDiv) errDiv.innerHTML = `<div class="global-error">${msg}</div>`;
+  btn.disabled = false; btn.textContent = 'Registrar Lead ✓';
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+init();
+</script>
+</body>
+</html>

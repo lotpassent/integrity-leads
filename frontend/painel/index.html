@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Executivo — Integrity Recruitment Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --dp: #0C2022; --panel: #112829; --mid: #1D4D4F;
+      --card: rgba(29,77,79,0.4); --hover: rgba(29,77,79,0.65);
+      --amb: #D4832A; --ambl: #E8A455; --ambd: rgba(212,131,42,0.15);
+      --cr: #F4F1EC; --crm: rgba(196,187,174,0.6); --crd: rgba(196,187,174,0.35);
+      --wh: #FAFAF8; --br: rgba(42,107,109,0.28); --bra: rgba(212,131,42,0.2);
+      --ok: #3D9970; --ng: #C0392B;
+    }
+    html,body{font-family:'Outfit',sans-serif;background:var(--dp);color:var(--cr);min-height:100vh;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
+    @keyframes ghostPulse{0%,100%{opacity:.5}50%{opacity:1}}
+    @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+
+    /* TOAST */
+    .toast-wrap{position:fixed;top:1.2rem;right:1.2rem;z-index:999;display:flex;flex-direction:column;gap:.6rem;}
+    .toast{background:var(--panel);border:1px solid var(--bra);border-left:3px solid var(--amb);border-radius:10px;padding:.8rem 1.2rem;font-size:.82rem;color:var(--cr);box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .35s cubic-bezier(.16,1,.3,1) both;max-width:300px;}
+    .toast.success{border-left-color:var(--ok);}
+    .toast.error{border-left-color:var(--ng);}
+
+    /* LOGIN */
+    #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+    #login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 80% 10%,rgba(42,107,109,.22) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 10% 90%,rgba(212,131,42,.07) 0%,transparent 55%);}
+    #login-screen::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(42,107,109,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(42,107,109,.06) 1px,transparent 1px);background-size:48px 48px;}
+    .login-wrap{position:relative;z-index:10;width:100%;max-width:420px;padding:1rem;animation:fadeUp .65s cubic-bezier(.16,1,.3,1) both;}
+    .login-card{background:rgba(17,40,41,.85);border:1px solid var(--br);border-radius:20px;padding:2.8rem 2.5rem;backdrop-filter:blur(12px);}
+    .login-logo{text-align:center;margin-bottom:2.2rem;}
+    .login-logo svg{display:block;margin:0 auto 1rem;}
+    .ln{font-weight:600;font-size:1.15rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cr);}
+    .ls{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amb);margin-top:2px;}
+    .ldiv{height:1px;background:var(--br);margin:1.8rem 0;}
+    .llabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--crd);margin-bottom:.5rem;}
+    .linput{width:100%;background:rgba(29,77,79,.3);border:1px solid var(--br);border-radius:10px;padding:.9rem 1rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:1rem;outline:none;transition:border-color .2s;margin-bottom:1.2rem;}
+    .linput:focus{border-color:var(--amb);}
+    .lbtn{width:100%;background:var(--amb);color:#0C2022;border:none;border-radius:10px;padding:1rem;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;transition:background .2s;}
+    .lbtn:hover{background:var(--ambl);}
+    .lerr{font-size:.8rem;color:#E07777;text-align:center;margin-top:.8rem;min-height:18px;}
+
+    /* LAYOUT */
+    #panel-screen{display:none;}
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:248px;background:var(--panel);border-right:1px solid var(--br);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+    .sb-logo{padding:1.6rem 1.5rem;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:.75rem;}
+    .sbn{font-weight:600;font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cr);}
+    .sbs{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--amb);margin-top:1px;}
+    .sb-nav{padding:1rem 0;flex:1;}
+    .nav-item{display:flex;align-items:center;gap:.8rem;padding:.78rem 1.5rem;font-size:.85rem;color:var(--crd);cursor:pointer;transition:all .2s;border-left:2px solid transparent;}
+    .nav-item:hover{color:var(--cr);background:rgba(42,107,109,.12);}
+    .nav-item.active{color:var(--ambl);border-left-color:var(--amb);background:var(--ambd);}
+    .sbi{font-size:1rem;}
+    .sb-sec{padding:.4rem 1.5rem .2rem;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--crd);margin-top:.5rem;}
+    .sb-footer{padding:1rem 1.5rem;border-top:1px solid var(--br);display:flex;flex-direction:column;gap:.5rem;}
+    .sb-link{display:flex;align-items:center;gap:6px;background:none;border:none;font-family:'Outfit',sans-serif;font-size:.78rem;color:var(--crd);cursor:pointer;transition:color .2s;padding:0;text-decoration:none;}
+    .sb-link:hover{color:var(--cr);}
+    .sb-link.amb{color:var(--amb);opacity:.8;}
+    .sb-link.amb:hover{opacity:1;}
+    .main-content{margin-left:248px;flex:1;display:flex;flex-direction:column;}
+    .topbar{padding:1.4rem 2rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;}
+    .page-eyebrow{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--amb);margin-bottom:2px;}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:500;color:var(--wh);}
+    .topbar-actions{display:flex;gap:.75rem;align-items:center;}
+    .btn-outline{background:transparent;border:1px solid var(--bra);color:var(--amb);border-radius:8px;padding:.55rem 1.1rem;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s;}
+    .btn-outline:hover{background:var(--ambd);}
+    .content-area{padding:2rem;flex:1;}
+    .view{display:none;}
+    .view.active{display:block;animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
+
+    /* METRICS */
+    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+    .metric-card{background:var(--card);border:1px solid var(--br);border-radius:14px;padding:1.5rem 1.4rem;position:relative;overflow:hidden;transition:border-color .2s;}
+    .metric-card:hover{border-color:var(--bra);}
+    .accent-line{position:absolute;top:0;left:0;right:0;height:2px;}
+    .acc-amb{background:linear-gradient(90deg,var(--amb),var(--ambl),transparent);}
+    .acc-teal{background:linear-gradient(90deg,#2A8B8E,#4AABAD,transparent);}
+    .acc-warn{background:linear-gradient(90deg,#E67E22,#F0A142,transparent);}
+    .acc-green{background:linear-gradient(90deg,var(--ok),#5DBF8A,transparent);}
+    .metric-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--crd);margin-bottom:.9rem;}
+    .metric-value{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:500;line-height:1;color:var(--wh);margin-bottom:.25rem;}
+    .metric-sub{font-size:.74rem;color:var(--crd);font-weight:300;}
+
+    /* DASHBOARD GRIDS */
+    .dash-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;}
+    .dash-2col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+    .span2{grid-column:span 2;}
+    .chart-card{background:var(--card);border:1px solid var(--br);border-radius:14px;padding:1.5rem;}
+    .chart-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--amb);margin-bottom:1.3rem;padding-bottom:.8rem;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;}
+    .meta-badge-sm{font-size:.68rem;background:rgba(212,131,42,.1);border:1px solid var(--bra);border-radius:100px;padding:2px 10px;color:var(--ambl);text-transform:none;letter-spacing:0;}
+    .funil-row{margin-bottom:1rem;}
+    .funil-meta{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.35rem;}
+    .funil-meta span:last-child{color:var(--crd);}
+    .funil-track{height:6px;background:rgba(255,255,255,.05);border-radius:100px;overflow:hidden;}
+    .funil-fill{height:100%;border-radius:100px;transition:width .9s cubic-bezier(.16,1,.3,1);}
+
+    /* META SEMANAL */
+    .meta-item{padding:.85rem 0;border-bottom:1px solid var(--br);}
+    .meta-item:last-child{border-bottom:none;}
+    .meta-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem;}
+    .meta-name{font-size:.87rem;font-weight:500;}
+    .meta-count-tag{display:flex;align-items:center;gap:.5rem;}
+    .meta-count{font-size:.8rem;color:var(--crd);}
+    .meta-tag{font-size:.65rem;border-radius:100px;padding:2px 9px;font-weight:600;}
+    .meta-tag.ok{background:rgba(61,153,112,.15);color:#6fcf97;}
+    .meta-tag.mid{background:rgba(241,196,15,.12);color:#f4d03f;}
+    .meta-tag.no{background:rgba(192,57,43,.12);color:#f08080;}
+    .meta-row{display:flex;align-items:center;gap:.75rem;}
+    .meta-track{flex:1;height:7px;background:rgba(255,255,255,.05);border-radius:100px;overflow:hidden;}
+    .meta-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.16,1,.3,1);}
+    .meta-pct{font-size:.72rem;color:var(--crd);min-width:42px;text-align:right;}
+
+    /* PERFORMANCE */
+    .ci-item{padding:.85rem 0;border-bottom:1px solid var(--br);}
+    .ci-item:last-child{border-bottom:none;}
+    .ci-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;}
+    .ci-name{font-size:.88rem;font-weight:500;}
+    .ci-total{font-size:.72rem;color:var(--crd);}
+    .ci-stats{display:flex;gap:1.2rem;margin-top:.4rem;}
+    .ci-sv{font-size:.95rem;font-weight:600;text-align:right;}
+    .ci-sl{font-size:.62rem;color:var(--crd);text-transform:uppercase;letter-spacing:.06em;}
+
+    /* TABLE */
+    .filters{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
+    .filter-input,.filter-select{background:var(--card);border:1px solid var(--br);border-radius:8px;padding:.6rem .9rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s;}
+    .filter-input{min-width:220px;}
+    .filter-select option{background:#1a3a3c;}
+    .filter-input:focus,.filter-select:focus{border-color:var(--bra);}
+    .table-wrap{background:var(--card);border:1px solid var(--br);border-radius:14px;overflow:hidden;}
+    table{width:100%;border-collapse:collapse;}
+    thead th{padding:.9rem 1.2rem;text-align:left;font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--crd);border-bottom:1px solid var(--br);white-space:nowrap;}
+    tbody tr{border-bottom:1px solid var(--br);cursor:pointer;transition:background .15s;}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:rgba(42,107,109,.15);}
+    tbody td{padding:.95rem 1.2rem;font-size:.85rem;vertical-align:middle;}
+    .td-co{font-weight:500;}
+    .td-se{font-size:.72rem;color:var(--crd);margin-top:1px;}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:500;white-space:nowrap;}
+    .badge-triagem{background:rgba(108,117,125,.15);color:#adb5bd;}
+    .badge-contato{background:rgba(74,144,226,.15);color:#74b3f7;}
+    .badge-proposta{background:rgba(155,89,182,.15);color:#c39bd3;}
+    .badge-negociacao{background:rgba(230,126,34,.15);color:#f0a142;}
+    .badge-ganho{background:rgba(61,153,112,.15);color:#6fcf97;}
+    .badge-perdido{background:rgba(192,57,43,.15);color:#f08080;}
+    .badge-urg-baixa{background:rgba(61,153,112,.12);color:#6fcf97;}
+    .badge-urg-media{background:rgba(241,196,15,.12);color:#f4d03f;}
+    .badge-urg-alta{background:rgba(230,126,34,.12);color:#f0a142;}
+    .badge-urg-critica{background:rgba(192,57,43,.12);color:#f08080;}
+    .empty-state{text-align:center;padding:4rem;color:var(--crd);}
+    .empty-state .esi{font-size:2rem;margin-bottom:.8rem;}
+
+    /* MODAL EXPORT */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px);}
+    .overlay.open{display:flex;}
+    .exp-card{background:var(--panel);border:1px solid var(--br);border-radius:20px;width:100%;max-width:500px;animation:fadeUp .35s cubic-bezier(.16,1,.3,1) both;}
+    .exp-head{padding:1.6rem 1.6rem 0;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;}
+    .exp-ey{font-size:.65rem;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+    .exp-ti{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:500;}
+    .exp-cl{background:none;border:none;color:var(--crd);font-size:1.1rem;cursor:pointer;transition:color .2s;}
+    .exp-cl:hover{color:var(--cr);}
+    .exp-body{padding:0 1.6rem 1.6rem;}
+    .exp-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--amb);margin-bottom:.6rem;display:block;}
+    .exp-sec{margin-bottom:1.2rem;}
+    .exp-row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+    .exp-sel,.exp-date{width:100%;background:rgba(29,77,79,.35);border:1px solid var(--br);border-radius:10px;padding:.75rem 1rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;}
+    .exp-sel option{background:#1a3a3c;}
+    .exp-sel:focus,.exp-date:focus{border-color:var(--amb);}
+    .exp-date::-webkit-calendar-picker-indicator{filter:invert(.6);cursor:pointer;}
+    .exp-prev{background:rgba(212,131,42,.06);border:1px solid var(--bra);border-radius:10px;padding:.9rem 1rem;font-size:.8rem;color:var(--crd);margin-top:.5rem;}
+    .exp-prev strong{color:var(--ambl);}
+    .btn-dl{width:100%;background:var(--amb);color:#0C2022;border:none;border-radius:10px;padding:.9rem;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s;margin-top:1.2rem;}
+    .btn-dl:hover{background:var(--ambl);}
+
+    /* KANBAN */
+    .kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;overflow-x:auto;padding-bottom:1rem;align-items:start;}
+    .kb-col{background:var(--card);border:1px solid var(--br);border-radius:12px;min-width:190px;transition:border-color .2s,background .2s;}
+    .kb-col.drag-over{border-color:var(--amb);background:rgba(212,131,42,.07);}
+    .kb-head{padding:.9rem 1rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0;}
+    .kb-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;}
+    .kb-count{font-size:.68rem;color:var(--crd);background:rgba(255,255,255,.05);border-radius:100px;padding:2px 8px;}
+    .kb-body{padding:.7rem;min-height:80px;}
+    .kb-card{background:rgba(12,32,34,.6);border:1px solid var(--br);border-radius:10px;padding:.85rem;margin-bottom:.55rem;cursor:grab;transition:all .2s;user-select:none;position:relative;}
+    .kb-card:hover{border-color:var(--bra);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.3);}
+    .kb-card:active{cursor:grabbing;}
+    .kb-card.dragging{opacity:.35;transform:rotate(1.5deg) scale(.97);}
+    .kb-ghost{border:2px dashed var(--amb);background:rgba(212,131,42,.05);border-radius:10px;height:76px;margin-bottom:.55rem;pointer-events:none;animation:ghostPulse 1s ease-in-out infinite;}
+    .kb-handle{position:absolute;top:.6rem;right:.6rem;font-size:.7rem;color:var(--crd);opacity:0;transition:opacity .2s;line-height:1;pointer-events:none;}
+    .kb-card:hover .kb-handle{opacity:1;}
+    .kb-company{font-size:.85rem;font-weight:500;margin-bottom:2px;padding-right:1rem;}
+    .kb-role{font-size:.73rem;color:var(--crd);margin-bottom:.55rem;}
+    .kb-foot{display:flex;justify-content:space-between;align-items:center;}
+    .kb-cons{font-size:.65rem;color:var(--crd);}
+
+    /* MODAL LEAD */
+    .lead-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px);}
+    .lead-ov.open{display:flex;}
+    .modal{background:var(--panel);border:1px solid var(--br);border-radius:20px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;animation:fadeUp .35s cubic-bezier(.16,1,.3,1) both;}
+    .modal-top{padding:1.6rem 1.6rem 0;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.4rem;}
+    .modal-id{font-size:.65rem;color:var(--amb);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+    .modal-co{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:500;}
+    .modal-cl{background:none;border:none;color:var(--crd);font-size:1.1rem;cursor:pointer;transition:color .2s;padding:0;}
+    .modal-cl:hover{color:var(--cr);}
+    .modal-body{padding:0 1.6rem 1.6rem;}
+    .modal-sec{margin-bottom:1.5rem;}
+    .modal-sh{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--amb);padding-bottom:.6rem;border-bottom:1px solid var(--bra);margin-bottom:.9rem;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+    .ii .il{font-size:.65rem;color:var(--crd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+    .ii .iv{font-size:.88rem;font-weight:500;}
+    .ii.full{grid-column:1/-1;}
+    .ctx-box{background:rgba(12,32,34,.5);border:1px solid var(--br);border-radius:10px;padding:1rem;font-size:.85rem;line-height:1.65;color:rgba(196,187,174,.75);}
+    .status-sel{width:100%;background:rgba(29,77,79,.35);border:1px solid var(--br);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:.88rem;outline:none;margin-bottom:.8rem;transition:border-color .2s;}
+    .status-sel:focus{border-color:var(--amb);}
+    .status-sel option{background:#1a3a3c;}
+    .obs-ta{width:100%;background:rgba(29,77,79,.35);border:1px solid var(--br);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;resize:vertical;min-height:80px;margin-bottom:1rem;transition:border-color .2s;}
+    .obs-ta:focus{border-color:var(--amb);}
+    .obs-ta::placeholder{color:rgba(196,187,174,.2);}
+    .btn-save{width:100%;background:var(--amb);color:#0C2022;border:none;border-radius:10px;padding:.85rem;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:background .2s;}
+    .btn-save:hover{background:var(--ambl);}
+    .hist-item{display:flex;gap:.85rem;margin-bottom:.9rem;}
+    .hist-dot{width:7px;height:7px;border-radius:50%;background:var(--amb);margin-top:5px;flex-shrink:0;}
+    .hist-text{font-size:.8rem;line-height:1.5;}
+    .hist-date{font-size:.7rem;color:var(--crd);margin-top:1px;}
+
+    /* PERGUNTAS */
+    .pq-list{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.5rem;}
+    .pq-card{background:var(--card);border:1px solid var(--br);border-radius:12px;padding:1rem 1.2rem;display:flex;align-items:center;gap:.9rem;transition:border-color .2s;}
+    .pq-card:hover{border-color:var(--bra);}
+    .pq-card.inativa{opacity:.45;}
+    .pq-drag{color:var(--crd);cursor:grab;font-size:1.1rem;padding:0 .2rem;user-select:none;}
+    .pq-drag:active{cursor:grabbing;}
+    .pq-icon{font-size:1.1rem;width:28px;text-align:center;flex-shrink:0;}
+    .pq-info{flex:1;min-width:0;}
+    .pq-label{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pq-meta{font-size:.7rem;color:var(--crd);margin-top:2px;display:flex;gap:.6rem;flex-wrap:wrap;}
+    .pq-badge{background:rgba(255,255,255,.05);border-radius:4px;padding:1px 7px;}
+    .pq-badge.obrig{background:rgba(212,131,42,.12);color:var(--ambl);}
+    .pq-actions{display:flex;gap:.4rem;flex-shrink:0;}
+    .btn-pq{background:none;border:1px solid var(--br);border-radius:7px;padding:.35rem .7rem;font-size:.75rem;color:var(--crd);cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;}
+    .btn-pq:hover{color:var(--cr);border-color:rgba(196,187,174,.3);}
+    .btn-pq.edit{border-color:rgba(74,144,226,.3);color:#74b3f7;}
+    .btn-pq.edit:hover{background:rgba(74,144,226,.1);}
+    .btn-pq.del{border-color:rgba(192,57,43,.3);color:#f08080;}
+    .btn-pq.del:hover{background:rgba(192,57,43,.1);}
+    .btn-pq.reativ{border-color:rgba(61,153,112,.3);color:#6fcf97;}
+    .btn-pq.reativ:hover{background:rgba(61,153,112,.1);}
+    .btn-pq.amb{background:var(--amb);color:#0C2022;border-color:var(--amb);font-weight:600;}
+    .btn-pq.amb:hover{background:var(--ambl);border-color:var(--ambl);}
+    .pq-form{background:var(--card);border:1px solid var(--bra);border-radius:14px;padding:1.4rem;margin-bottom:1.5rem;animation:fadeUp .3s cubic-bezier(.16,1,.3,1) both;}
+    .pq-form-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--amb);margin-bottom:1.2rem;}
+    .pq-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem;}
+    .pq-grid.full{grid-template-columns:1fr;}
+    .pq-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--crd);display:block;margin-bottom:.4rem;}
+    .pq-input,.pq-sel{width:100%;background:rgba(29,77,79,.35);border:1px solid var(--br);border-radius:9px;padding:.7rem .9rem;color:var(--cr);font-family:'Outfit',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;}
+    .pq-input:focus,.pq-sel:focus{border-color:var(--amb);}
+    .pq-sel option{background:#1a3a3c;}
+    .pq-input::placeholder{color:rgba(196,187,174,.2);}
+    .pq-check-row{display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--crd);margin-bottom:.85rem;}
+    .pq-check-row input[type=checkbox]{accent-color:var(--amb);width:16px;height:16px;cursor:pointer;}
+    .pq-form-actions{display:flex;gap:.6rem;}
+    .pq-info-box{background:rgba(212,131,42,.06);border:1px solid var(--bra);border-radius:10px;padding:.9rem 1rem;font-size:.78rem;color:var(--crd);margin-bottom:1.2rem;line-height:1.6;}
+    .pq-info-box strong{color:var(--ambl);}
+    .pq-section-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--crd);margin:1.2rem 0 .6rem;padding-bottom:.5rem;border-bottom:1px solid var(--br);}
+    .pq-empty{text-align:center;padding:2.5rem;color:var(--crd);font-size:.85rem;}
+
+    @media(max-width:1200px){.dash-3col{grid-template-columns:1fr 1fr;}.span2{grid-column:span 2;}}
+    @media(max-width:1024px){.metrics-grid{grid-template-columns:1fr 1fr;}.dash-2col{grid-template-columns:1fr;}.kanban{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:900px){.sidebar{display:none;}.main-content{margin-left:0;}}
+    @media(max-width:600px){.metrics-grid{grid-template-columns:1fr;}.kanban{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect width="56" height="56" rx="10" fill="#1D4D4F"/>
+          <path d="M8 8 L30 8 L48 26 L48 48 L8 48 Z" fill="#D4832A" opacity="0.85"/>
+          <path d="M8 8 L30 8 L48 26 L30 26 L8 8 Z" fill="#1D4D4F"/>
+          <circle cx="22" cy="22" r="6" fill="#1D4D4F"/>
+          <circle cx="22" cy="22" r="3" fill="#D4832A"/>
+        </svg>
+        <div class="ln">Integrity</div>
+        <div class="ls">Recruitment Group</div>
+      </div>
+      <div class="ldiv"></div>
+      <div class="llabel">Senha de acesso</div>
+      <input class="linput" type="password" id="loginPw" placeholder="••••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="lbtn" onclick="doLogin()">Acessar Painel Executivo →</button>
+      <div class="lerr" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="panel-screen">
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sb-logo">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <rect width="34" height="34" rx="6" fill="#1D4D4F"/>
+          <path d="M4 4 L18 4 L30 16 L30 30 L4 30 Z" fill="#D4832A" opacity="0.85"/>
+          <path d="M4 4 L18 4 L30 16 L18 16 L4 4 Z" fill="#1D4D4F"/>
+          <circle cx="13" cy="13" r="4" fill="#1D4D4F"/>
+          <circle cx="13" cy="13" r="2" fill="#D4832A"/>
+        </svg>
+        <div><div class="sbn">Integrity</div><div class="sbs">Recruitment Group</div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec">Visão Geral</div>
+        <div class="nav-item active" onclick="showView('dashboard',this)"><span class="sbi">📊</span> Dashboard</div>
+        <div class="sb-sec" style="margin-top:1rem">Leads</div>
+        <div class="nav-item" onclick="showView('leads',this)"><span class="sbi">📋</span> Todos os Leads</div>
+        <div class="nav-item" onclick="showView('kanban',this)"><span class="sbi">🗂️</span> Funil Kanban</div>
+        <div class="sb-sec" style="margin-top:1rem">Configurações</div>
+        <div class="nav-item" onclick="showView('perguntas',this)"><span class="sbi">✏️</span> Perguntas</div>
+      </nav>
+      <div class="sb-footer">
+        <a href="/" class="sb-link amb">🏠 Página Inicial</a>
+        <a href="/consultor" class="sb-link">📋 Formulário Consultor</a>
+        <button class="sb-link" onclick="doLogout()">⬅ Sair do Painel</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+
+      <!-- DASHBOARD -->
+      <div id="view-dashboard" class="view active">
+        <div class="topbar">
+          <div><div class="page-eyebrow">Visão Geral</div><div class="page-title">Dashboard Comercial</div></div>
+          <div class="topbar-actions"><button class="btn-outline" onclick="openExport()">⬇ Exportar Excel</button></div>
+        </div>
+        <div class="content-area">
+          <div class="metrics-grid" id="metricsGrid">
+            <div class="metric-card"><div class="accent-line acc-amb"></div><div class="metric-label">Carregando...</div></div>
+          </div>
+          <!-- Linha 1: Funil + Meta Semanal -->
+          <div class="dash-3col">
+            <div class="chart-card">
+              <div class="chart-title">Funil por Status</div>
+              <div id="funilChart"></div>
+            </div>
+            <div class="chart-card span2">
+              <div class="chart-title">
+                Meta Semanal por Consultor
+                <span class="meta-badge-sm">🎯 Meta: 2 leads / semana</span>
+              </div>
+              <div id="metaChart"></div>
+            </div>
+          </div>
+          <!-- Linha 2: Performance -->
+          <div class="dash-2col">
+            <div class="chart-card" style="grid-column:1/-1">
+              <div class="chart-title">Performance Acumulada por Consultor</div>
+              <div id="consultoresChart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADS -->
+      <div id="view-leads" class="view">
+        <div class="topbar">
+          <div><div class="page-eyebrow">Gestão</div><div class="page-title">Todos os Leads</div></div>
+          <div class="topbar-actions"><button class="btn-outline" onclick="openExport()">⬇ Exportar Excel</button></div>
+        </div>
+        <div class="content-area">
+          <div class="filters">
+            <input class="filter-input" id="searchInput" type="text" placeholder="🔍 Buscar empresa, vaga ou consultor..." oninput="filterLeads()"/>
+            <select class="filter-select" id="filterStatus" onchange="filterLeads()">
+              <option value="">Todos os status</option>
+              <option value="triagem">Triagem</option>
+              <option value="contato_inicial">Contato Inicial</option>
+              <option value="proposta_enviada">Proposta Enviada</option>
+              <option value="negociacao">Negociação</option>
+              <option value="fechado_ganho">Fechado ✓</option>
+              <option value="fechado_perdido">Perdido</option>
+            </select>
+            <select class="filter-select" id="filterUrg" onchange="filterLeads()">
+              <option value="">Toda urgência</option>
+              <option value="critica">🔴 Crítica</option>
+              <option value="alta">🟠 Alta</option>
+              <option value="media">🟡 Média</option>
+              <option value="baixa">🟢 Baixa</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Empresa</th><th>Vaga</th><th>Consultor</th><th>Urgência</th><th>Status</th><th>Data</th></tr></thead>
+              <tbody id="leadsBody"><tr><td colspan="7"><div class="empty-state"><div class="esi">⏳</div>Carregando...</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- KANBAN -->
+      <div id="view-kanban" class="view">
+        <div class="topbar">
+          <div><div class="page-eyebrow">Visual</div><div class="page-title">Funil Kanban</div></div>
+          <div class="topbar-actions"><span style="font-size:.75rem;color:var(--crd)">✋ Arraste os cards entre colunas</span></div>
+        </div>
+        <div class="content-area">
+          <div class="kanban" id="kanbanBoard"></div>
+        </div>
+      </div>
+
+      <!-- PERGUNTAS -->
+      <div id="view-perguntas" class="view">
+        <div class="topbar">
+          <div><div class="page-eyebrow">Configurações</div><div class="page-title">Perguntas do Consultor</div></div>
+          <div class="topbar-actions">
+            <button class="btn-outline" onclick="toggleFormNova()">+ Nova Pergunta</button>
+          </div>
+        </div>
+        <div class="content-area">
+
+          <div class="pq-info-box">
+            Estas perguntas aparecem no <strong>roteiro de sondagem</strong> exibido ao consultor durante a entrevista. Reordene arrastando, edite os textos ou desative as que não usar.
+          </div>
+
+          <!-- Formulário nova/editar pergunta -->
+          <div class="pq-form" id="pqForm" style="display:none">
+            <div class="pq-form-title" id="pqFormTitle">Nova Pergunta</div>
+            <input type="hidden" id="pqEditId"/>
+            <div class="pq-grid">
+              <div>
+                <label class="pq-lbl">Texto da pergunta *</label>
+                <input class="pq-input" id="pqLabel" placeholder='Ex: "A empresa usa consultoria externa?"'/>
+              </div>
+              <div>
+                <label class="pq-lbl">Nome interno (campo) *</label>
+                <input class="pq-input" id="pqCampo" placeholder='Ex: usa_consultoria (sem espaços)'/>
+              </div>
+            </div>
+            <div class="pq-grid">
+              <div>
+                <label class="pq-lbl">Tipo de resposta</label>
+                <select class="pq-sel" id="pqTipo" onchange="toggleOpcoes()">
+                  <option value="text">Texto curto</option>
+                  <option value="textarea">Texto longo</option>
+                  <option value="select">Lista de opções</option>
+                  <option value="number">Número</option>
+                  <option value="boolean">Sim / Não</option>
+                </select>
+              </div>
+              <div>
+                <label class="pq-lbl">Ordem</label>
+                <input class="pq-input" id="pqOrdem" type="number" min="1" placeholder="Ex: 5"/>
+              </div>
+            </div>
+            <div id="pqOpcoesWrap" style="display:none;margin-bottom:.85rem">
+              <label class="pq-lbl">Opções (uma por linha)</label>
+              <textarea class="pq-input" id="pqOpcoes" rows="3" placeholder="opcao1&#10;opcao2&#10;opcao3" style="resize:vertical;min-height:70px"></textarea>
+            </div>
+            <div class="pq-check-row">
+              <input type="checkbox" id="pqObrig"/>
+              <label for="pqObrig" style="cursor:pointer">Pergunta obrigatória</label>
+            </div>
+            <div class="pq-form-actions">
+              <button class="btn-pq amb" onclick="salvarPergunta()">✓ Salvar</button>
+              <button class="btn-pq" onclick="cancelarForm()">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- Lista ativas -->
+          <div class="pq-section-title">Ativas — exibidas no formulário do consultor</div>
+          <div class="pq-list" id="pqListaAtiva"><div class="pq-empty">⏳ Carregando...</div></div>
+
+          <!-- Lista inativas -->
+          <div id="pqInativasWrap" style="display:none">
+            <div class="pq-section-title" style="cursor:pointer;display:flex;align-items:center;gap:.5rem" onclick="toggleInativas()">
+              Desativadas
+              <span id="pqInativasToggle" style="color:var(--amb);font-size:.75rem;text-transform:none;letter-spacing:0;font-weight:400">▸ mostrar</span>
+            </div>
+            <div class="pq-list" id="pqListaInativa" style="display:none"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORTAR -->
+<div class="overlay" id="exportOverlay" onclick="if(event.target===this)closeExport()">
+  <div class="exp-card">
+    <div class="exp-head">
+      <div><div class="exp-ey">Relatório</div><div class="exp-ti">Exportar Leads (.xlsx)</div></div>
+      <button class="exp-cl" onclick="closeExport()">✕</button>
+    </div>
+    <div class="exp-body">
+      <div class="exp-sec">
+        <label class="exp-lbl">Período de criação</label>
+        <div class="exp-row2">
+          <input class="exp-date" type="date" id="expDe" onchange="updatePreview()"/>
+          <input class="exp-date" type="date" id="expAte" onchange="updatePreview()"/>
+        </div>
+      </div>
+      <div class="exp-sec">
+        <label class="exp-lbl">Status</label>
+        <select class="exp-sel" id="expStatus" onchange="updatePreview()">
+          <option value="">Todos</option>
+          <option value="triagem">Triagem</option>
+          <option value="contato_inicial">Contato Inicial</option>
+          <option value="proposta_enviada">Proposta Enviada</option>
+          <option value="negociacao">Negociação</option>
+          <option value="fechado_ganho">Fechado — Ganho</option>
+          <option value="fechado_perdido">Fechado — Perdido</option>
+        </select>
+      </div>
+      <div class="exp-row2" style="gap:.75rem;margin-bottom:1.2rem">
+        <div><label class="exp-lbl">Urgência</label>
+          <select class="exp-sel" id="expUrg" onchange="updatePreview()">
+            <option value="">Toda</option>
+            <option value="critica">🔴 Crítica</option>
+            <option value="alta">🟠 Alta</option>
+            <option value="media">🟡 Média</option>
+            <option value="baixa">🟢 Baixa</option>
+          </select>
+        </div>
+        <div><label class="exp-lbl">Consultor</label>
+          <select class="exp-sel" id="expConsultor" onchange="updatePreview()">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="exp-prev" id="expPreview">Configure os filtros acima para personalizar o relatório.</div>
+      <button class="btn-dl" onclick="doExport()">⬇ Baixar Excel Formatado</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LEAD -->
+<div class="lead-ov" id="leadOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-top">
+      <div><div class="modal-id" id="mId"></div><div class="modal-co" id="mCo"></div></div>
+      <button class="modal-cl" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec"><div class="modal-sh">Detalhes da Oportunidade</div><div class="info-grid" id="mGrid"></div></div>
+      <div class="modal-sec" id="mCtxSec"><div class="modal-sh">Contexto da Entrevista</div><div class="ctx-box" id="mCtx"></div></div>
+      <div class="modal-sec" id="mExtraSec" style="display:none"><div class="modal-sh">Informações Adicionais</div><div id="mExtra"></div></div>
+      <div class="modal-sec">
+        <div class="modal-sh">Atualizar Status</div>
+        <select class="status-sel" id="mStatus">
+          <option value="triagem">Triagem</option>
+          <option value="contato_inicial">Contato Inicial</option>
+          <option value="proposta_enviada">Proposta Enviada</option>
+          <option value="negociacao">Negociação</option>
+          <option value="fechado_ganho">Fechado — Ganho ✓</option>
+          <option value="fechado_perdido">Fechado — Perdido</option>
+        </select>
+        <textarea class="obs-ta" id="mObs" placeholder="Observação sobre esta atualização..."></textarea>
+        <button class="btn-save" onclick="saveStatus()">Salvar Atualização</button>
+        <button class="btn-save" onclick="deleteLead()" style="margin-top:.6rem;background:rgba(192,57,43,.15);color:#f08080;border:1px solid rgba(192,57,43,.3);">🗑 Excluir este lead</button>
+      </div>
+      <div class="modal-sec"><div class="modal-sh">Histórico</div><div id="mHist"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const META_SEMANAL = 2;
+  const CONSULTORES_FIXOS = ['Camilla Moriya','Cláudio Ferreira','Camila Benedetti','Paula Vieira','Luís Hartmann','Ana Delibi'];
+
+  const SL = {triagem:'Triagem',contato_inicial:'Contato Inicial',proposta_enviada:'Proposta',negociacao:'Negociação',fechado_ganho:'Fechado ✓',fechado_perdido:'Perdido'};
+  const EM = {baixa:'🟢',media:'🟡',alta:'🟠',critica:'🔴'};
+  const SC = {triagem:'#6C757D',contato_inicial:'#4A90E2',proposta_enviada:'#9B59B6',negociacao:'#E67E22',fechado_ganho:'#3D9970',fechado_perdido:'#C0392B'};
+  const NL = {junior:'Júnior',pleno:'Pleno',senior:'Sênior',especialista:'Especialista',gerencia:'Gerência',diretoria:'Diretoria','c-level':'C-Level'};
+  const COLS = [
+    {k:'triagem',c:'#6C757D',l:'Triagem'},{k:'contato_inicial',c:'#4A90E2',l:'Contato Inicial'},
+    {k:'proposta_enviada',c:'#9B59B6',l:'Proposta'},{k:'negociacao',c:'#E67E22',l:'Negociação'},
+    {k:'fechado_ganho',c:'#3D9970',l:'Fechado ✓'},{k:'fechado_perdido',c:'#C0392B',l:'Perdido'},
+  ];
+
+  /* TOAST */
+  function toast(msg,type='success'){
+    const el=document.createElement('div');
+    el.className=`toast ${type}`;el.textContent=msg;
+    document.getElementById('toastWrap').appendChild(el);
+    setTimeout(()=>{el.style.animation='toastOut .35s forwards';setTimeout(()=>el.remove(),350);},3200);
+  }
+
+  /* AUTH */
+  if(sessionStorage.getItem('irg_auth')==='1')showPanel();
+
+  async function doLogin(){
+    const pw=document.getElementById('loginPw').value;
+    const err=document.getElementById('loginErr');err.textContent='';
+    try{
+      const d=await(await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})).json();
+      if(d.success){sessionStorage.setItem('irg_auth','1');sessionStorage.setItem('irg_pw',pw);showPanel();}
+      else err.textContent=d.message;
+    }catch{err.textContent='Erro de conexão.';}
+  }
+
+  function showPanel(){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('panel-screen').style.display='block';
+    loadDashboard();loadLeads();
+  }
+  function doLogout(){sessionStorage.removeItem('irg_auth');sessionStorage.removeItem('irg_pw');location.reload();}
+
+  /* NAV */
+  function showView(name,el){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById(`view-${name}`).classList.add('active');
+    if(el)el.classList.add('active');
+    if(name==='leads')loadLeads();
+    if(name==='kanban')loadKanban();
+    if(name==='perguntas')loadPerguntas();
+  }
+
+  /* DASHBOARD */
+  async function loadDashboard(){
+    try{
+      const d=await(await fetch('/api/dashboard')).json();
+      if(!d.success)return;
+      const m=d.metricas;
+
+      document.getElementById('metricsGrid').innerHTML=`
+        <div class="metric-card"><div class="accent-line acc-amb"></div><div class="metric-label">Total de Leads</div><div class="metric-value">${m.totais.total}</div><div class="metric-sub">acumulado geral</div></div>
+        <div class="metric-card"><div class="accent-line acc-green"></div><div class="metric-label">Contratos Fechados</div><div class="metric-value">${m.totais.fechados}</div><div class="metric-sub">leads convertidos</div></div>
+        <div class="metric-card"><div class="accent-line acc-warn"></div><div class="metric-label">Urgentes / Críticos</div><div class="metric-value">${m.totais.urgentes}</div><div class="metric-sub">requerem ação imediata</div></div>
+        <div class="metric-card"><div class="accent-line acc-teal"></div><div class="metric-label">Esta Semana</div><div class="metric-value">${m.totais.esta_semana}</div><div class="metric-sub">novos nos últimos 7 dias</div></div>
+      `;
+
+      // Funil
+      const ord=['triagem','contato_inicial','proposta_enviada','negociacao','fechado_ganho','fechado_perdido'];
+      const mx=Math.max(...m.por_status.map(s=>+s.total),1);
+      document.getElementById('funilChart').innerHTML=[...m.por_status]
+        .sort((a,b)=>ord.indexOf(a.status)-ord.indexOf(b.status))
+        .map(s=>`<div class="funil-row"><div class="funil-meta"><span>${SL[s.status]||s.status}</span><span>${s.total}</span></div><div class="funil-track"><div class="funil-fill" style="width:${(s.total/mx*100).toFixed(0)}%;background:${SC[s.status]||'#888'}"></div></div></div>`)
+        .join('');
+
+      // Meta Semanal — garante que todos os consultores fixos apareçam
+      const consultorMap={};
+      m.por_consultor.forEach(c=>{consultorMap[c.consultor_nome]=+c.leads_esta_semana;});
+      const todosConsultores=[...CONSULTORES_FIXOS];
+      m.por_consultor.forEach(c=>{if(!todosConsultores.includes(c.consultor_nome))todosConsultores.push(c.consultor_nome);});
+
+      document.getElementById('metaChart').innerHTML=todosConsultores.map(nome=>{
+        const realizados=consultorMap[nome]||0;
+        const pct=Math.min((realizados/META_SEMANAL)*100,100);
+        let cor,tag,tagClass;
+        if(realizados>=META_SEMANAL){cor='#3D9970';tag='✓ Meta atingida';tagClass='ok';}
+        else if(realizados>=1){cor='#f4d03f';tag=`${realizados}/${META_SEMANAL} leads`;tagClass='mid';}
+        else{cor='#C0392B';tag='Sem leads';tagClass='no';}
+        return `<div class="meta-item">
+          <div class="meta-top-row">
+            <div class="meta-name">${nome}</div>
+            <div class="meta-count-tag">
+              <span class="meta-count">${realizados} de ${META_SEMANAL} esta semana</span>
+              <span class="meta-tag ${tagClass}">${tag}</span>
+            </div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-track"><div class="meta-fill" style="width:${pct}%;background:${cor}"></div></div>
+            <div class="meta-pct">${pct.toFixed(0)}%</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Performance acumulada
+      document.getElementById('consultoresChart').innerHTML=m.por_consultor.length===0
+        ?'<div style="color:var(--crd);font-size:.82rem">Nenhum dado ainda.</div>'
+        :m.por_consultor.map(c=>`<div class="ci-item">
+            <div class="ci-top">
+              <div><div class="ci-name">${c.consultor_nome}</div><div class="ci-total">${c.total_leads} leads registrados</div></div>
+            </div>
+            <div class="ci-stats">
+              <div><div class="ci-sv" style="color:#6fcf97">${c.fechados_ganho}</div><div class="ci-sl">Fechados</div></div>
+              <div><div class="ci-sv" style="color:#f0a142">${c.leads_urgentes}</div><div class="ci-sl">Urgentes</div></div>
+              <div><div class="ci-sv" style="color:#74b3f7">${c.leads_esta_semana}</div><div class="ci-sl">Semana</div></div>
+              <div><div class="ci-sv" style="color:var(--crd)">${c.total_leads}</div><div class="ci-sl">Total</div></div>
+            </div>
+          </div>`).join('');
+
+    }catch(e){console.error(e);}
+  }
+
+  /* LEADS */
+  let allLeads=[];
+
+  async function loadLeads(){
+    try{
+      const d=await(await fetch('/api/leads')).json();
+      if(!d.success)return;
+      allLeads=d.leads;
+      renderTable(allLeads);
+      fillConsultorSelects();
+    }catch(e){console.error(e);}
+  }
+
+  function fillConsultorSelects(){
+    const names=[...new Set(allLeads.map(l=>l.consultor_nome))].sort();
+    const sel=document.getElementById('expConsultor');
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Todos</option>'+names.map(n=>`<option${n===cur?' selected':''}>${n}</option>`).join('');
+  }
+
+  function filterLeads(){
+    const s=document.getElementById('searchInput').value.toLowerCase();
+    const st=document.getElementById('filterStatus').value;
+    const ur=document.getElementById('filterUrg').value;
+    renderTable(allLeads.filter(l=>
+      (!s||l.empresa_nome.toLowerCase().includes(s)||l.cargo_em_aberto.toLowerCase().includes(s)||l.consultor_nome.toLowerCase().includes(s))
+      &&(!st||l.status===st)&&(!ur||l.urgencia===ur)));
+  }
+
+  function renderTable(leads){
+    const b=document.getElementById('leadsBody');
+    if(!leads.length){b.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="esi">📭</div>Nenhum lead encontrado</div></td></tr>`;return;}
+    b.innerHTML=leads.map(l=>`<tr onclick="openLead(${l.id})">
+      <td style="color:var(--crd);font-size:.75rem">#${l.id}</td>
+      <td><div class="td-co">${l.empresa_nome}</div><div class="td-se">${l.empresa_setor||''}</div></td>
+      <td>${l.cargo_em_aberto}</td>
+      <td style="font-size:.82rem">${l.consultor_nome}</td>
+      <td><span class="badge badge-urg-${l.urgencia}">${EM[l.urgencia]} ${l.urgencia}</span></td>
+      <td><span class="badge badge-${l.status}">${SL[l.status]||l.status}</span></td>
+      <td style="color:var(--crd);font-size:.78rem">${new Date(l.criado_em).toLocaleDateString('pt-BR')}</td>
+    </tr>`).join('');
+  }
+
+  /* EXPORT */
+  function openExport(){fillConsultorSelects();updatePreview();document.getElementById('exportOverlay').classList.add('open');}
+  function closeExport(){document.getElementById('exportOverlay').classList.remove('open');}
+
+  function getFiltered(){
+    const de=document.getElementById('expDe').value,ate=document.getElementById('expAte').value;
+    const st=document.getElementById('expStatus').value,ur=document.getElementById('expUrg').value,co=document.getElementById('expConsultor').value;
+    return allLeads.filter(l=>{
+      const d=new Date(l.criado_em);
+      return(!de||d>=new Date(de))&&(!ate||d<=new Date(ate+'T23:59:59'))
+        &&(!st||l.status===st)&&(!ur||l.urgencia===ur)&&(!co||l.consultor_nome===co);
+    });
+  }
+
+  function updatePreview(){
+    const f=getFiltered();
+    const parts=[];
+    const de=document.getElementById('expDe').value,ate=document.getElementById('expAte').value;
+    const st=document.getElementById('expStatus').value,ur=document.getElementById('expUrg').value,co=document.getElementById('expConsultor').value;
+    if(de||ate)parts.push(`período: ${de||'início'} → ${ate||'hoje'}`);
+    if(st)parts.push(`status: ${SL[st]}`);
+    if(ur)parts.push(`urgência: ${ur}`);
+    if(co)parts.push(`consultor: ${co}`);
+    document.getElementById('expPreview').innerHTML=`<strong>${f.length} lead(s)</strong> serão exportados${parts.length?' — '+parts.join(', '):'.'}.`;
+  }
+
+  function doExport(){
+    const f=getFiltered();
+    if(!f.length){toast('Nenhum lead com esses filtros.','error');return;}
+    const h=['ID','Consultor','Empresa','Setor','Porte','Contato','Cargo Contato','E-mail','Telefone','Vaga','Nível','Qtd Vagas','Urgência','Status','Observações','Contexto','Criado em','Atualizado em'];
+    const rows=f.map(l=>[l.id,l.consultor_nome,l.empresa_nome,l.empresa_setor||'',l.empresa_porte||'',l.contato_nome||'',l.contato_cargo||'',l.contato_email||'',l.contato_telefone||'',l.cargo_em_aberto,l.nivel_cargo||'',l.quantidade_vagas,l.urgencia,l.status,(l.observacoes||'').replace(/;/g,','),(l.contexto_entrevistado||'').replace(/;/g,','),new Date(l.criado_em).toLocaleString('pt-BR'),new Date(l.atualizado_em).toLocaleString('pt-BR')].map(v=>`"${v}"`).join(';'));
+    const blob=new Blob(['\uFEFF'+[h.join(';'),...rows].join('\n')],{type:'text/csv;charset=utf-8;'});
+    const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:`leads_integrity_${new Date().toISOString().split('T')[0]}.csv`});
+    a.click();URL.revokeObjectURL(a.href);
+    closeExport();toast(`✓ ${f.length} lead(s) exportados!`);
+  }
+
+  /* KANBAN */
+  let dragId=null,dragEl=null,ghost=null;
+
+  async function loadKanban(){if(!allLeads.length)await loadLeads();renderKanban();}
+
+  function renderKanban(){
+    document.getElementById('kanbanBoard').innerHTML=COLS.map(col=>{
+      const items=allLeads.filter(l=>l.status===col.k);
+      return `<div class="kb-col" data-status="${col.k}" ondragover="colOver(event,this)" ondragleave="colLeave(this)" ondrop="colDrop(event,this)">
+        <div class="kb-head"><div class="kb-title" style="color:${col.c}">${col.l}</div><div class="kb-count">${items.length}</div></div>
+        <div class="kb-body" id="kbb-${col.k}">
+          ${items.length===0?'<div style="font-size:.75rem;color:var(--crd);text-align:center;padding:.8rem 0">Vazio</div>':items.map(mkCard).join('')}
+        </div></div>`;
+    }).join('');
+  }
+
+  function mkCard(l){
+    return `<div class="kb-card" draggable="true" data-id="${l.id}" data-status="${l.status}"
+      ondragstart="cardStart(event,this)" ondragend="cardEnd(this)" onclick="openLead(${l.id})">
+      <div class="kb-handle">⠿</div>
+      <div class="kb-company">${l.empresa_nome}</div>
+      <div class="kb-role">${l.cargo_em_aberto}</div>
+      <div class="kb-foot"><span class="kb-cons">${l.consultor_nome.split(' ')[0]}</span><span class="badge badge-urg-${l.urgencia}" style="font-size:.63rem">${EM[l.urgencia]}</span></div>
+    </div>`;
+  }
+
+  function cardStart(e,el){
+    dragId=parseInt(el.dataset.id);dragEl=el;
+    e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId);
+    setTimeout(()=>el.classList.add('dragging'),0);
+    ghost=document.createElement('div');ghost.className='kb-ghost';
+  }
+  function cardEnd(el){
+    el.classList.remove('dragging');ghost?.remove();ghost=null;dragEl=null;
+    document.querySelectorAll('.kb-col').forEach(c=>c.classList.remove('drag-over'));
+  }
+  function colOver(e,col){
+    e.preventDefault();e.dataTransfer.dropEffect='move';col.classList.add('drag-over');
+    const body=col.querySelector('.kb-body');
+    if(ghost&&!body.contains(ghost)){ghost.remove();body.appendChild(ghost);}
+  }
+  function colLeave(col){col.classList.remove('drag-over');}
+
+  async function colDrop(e,col){
+    e.preventDefault();col.classList.remove('drag-over');ghost?.remove();
+    const ns=col.dataset.status;
+    if(!dragId)return;
+    const lead=allLeads.find(l=>l.id===dragId);
+    if(!lead||lead.status===ns)return;
+    const prev=lead.status;lead.status=ns;renderKanban();
+    try{
+      const r=await fetch(`/api/leads/${dragId}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:ns,observacao:`Kanban: ${SL[prev]} → ${SL[ns]}`})});
+      if((await r.json()).success){toast(`✓ ${lead.empresa_nome} → ${SL[ns]}`);loadDashboard();}
+      else{lead.status=prev;renderKanban();toast('Erro ao mover.','error');}
+    }catch{lead.status=prev;renderKanban();toast('Erro de conexão.','error');}
+    dragId=null;
+  }
+
+  /* MODAL */
+  let curLead=null;
+
+  async function openLead(id){
+    if(dragEl)return;
+    curLead=id;document.getElementById('leadOverlay').classList.add('open');
+    try{
+      const d=await(await fetch(`/api/leads/${id}/historico`)).json();
+      if(!d.success)return;
+      const l=d.lead;
+      document.getElementById('mId').textContent=`Lead #${l.id} — ${new Date(l.criado_em).toLocaleDateString('pt-BR')}`;
+      document.getElementById('mCo').textContent=l.empresa_nome;
+      document.getElementById('mStatus').value=l.status;
+      document.getElementById('mGrid').innerHTML=`
+        <div class="ii"><div class="il">Consultor</div><div class="iv">${l.consultor_nome}</div></div>
+        <div class="ii"><div class="il">Setor</div><div class="iv">${l.empresa_setor||'—'}</div></div>
+        <div class="ii"><div class="il">Vaga</div><div class="iv">${l.cargo_em_aberto}</div></div>
+        <div class="ii"><div class="il">Nível</div><div class="iv">${NL[l.nivel_cargo]||l.nivel_cargo||'—'}</div></div>
+        <div class="ii"><div class="il">Urgência</div><div class="iv">${EM[l.urgencia]} ${l.urgencia}</div></div>
+        <div class="ii"><div class="il">Qtd. Vagas</div><div class="iv">${l.quantidade_vagas}</div></div>
+        ${l.contato_nome?`<div class="ii full"><div class="il">Contato</div><div class="iv">${l.contato_nome}${l.contato_cargo?' ('+l.contato_cargo+')':''}</div></div>`:''}
+        ${l.contato_email?`<div class="ii"><div class="il">E-mail</div><div class="iv">${l.contato_email}</div></div>`:''}
+      `;
+      const cs=document.getElementById('mCtxSec');
+      if(l.contexto_entrevistado||l.observacoes){cs.style.display='block';document.getElementById('mCtx').innerHTML=`${l.contexto_entrevistado?`<p>${l.contexto_entrevistado}</p>`:''}${l.observacoes?`<p style="margin-top:.7rem;color:rgba(196,187,174,.5)">${l.observacoes}</p>`:''}`;}
+      else cs.style.display='none';
+      const extraSec=document.getElementById('mExtraSec');
+      const extras=d.respostas_extras||[];
+      if(extras.length>0){
+        extraSec.style.display='block';
+        document.getElementById('mExtra').innerHTML=extras.map(r=>`<div class="ii full" style="margin-bottom:.75rem"><div class="il">${r.label}</div><div class="iv">${r.valor||'<span style="color:var(--crd)">—</span>'}</div></div>`).join('');
+      }else{extraSec.style.display='none';}
+      document.getElementById('mHist').innerHTML=d.historico.length===0
+        ?'<div style="font-size:.8rem;color:var(--crd)">Nenhuma movimentação ainda.</div>'
+        :d.historico.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-text">${h.status_anterior?`<span style="color:var(--crd)">${SL[h.status_anterior]||h.status_anterior}</span> → `:''}<strong>${SL[h.status_novo]||h.status_novo}</strong>${h.observacao?` <span style="color:var(--crd)">— ${h.observacao}</span>`:''}</div><div class="hist-date">${new Date(h.criado_em).toLocaleString('pt-BR')}</div></div></div>`).join('');
+    }catch(e){console.error(e);}
+  }
+
+  function closeModal(){document.getElementById('leadOverlay').classList.remove('open');document.getElementById('mObs').value='';curLead=null;}
+
+  /* ── PERGUNTAS ─────────────────────────────────────────────────────────── */
+  const TIPO_ICON = {text:'✏️',textarea:'📝',select:'📋',number:'🔢',boolean:'✅'};
+  let pqDados = [];        // cache local
+  let pqDragId = null;     // id arrastado para reordenar
+
+  function getSenha(){ return sessionStorage.getItem('irg_pw') || ''; }
+
+  async function loadPerguntas(){
+    const lista = document.getElementById('pqListaAtiva');
+    try{
+      const r = await fetch('/api/perguntas/todas', {headers:{'x-panel-password': getSenha()}});
+      if(r.status === 401){ lista.innerHTML='<div class="pq-empty">🔒 Sem permissão.</div>'; return; }
+      pqDados = await r.json();
+      renderPerguntas();
+    }catch(e){
+      lista.innerHTML='<div class="pq-empty">⚠️ Erro ao conectar com o servidor.</div>';
+    }
+  }
+
+  function renderPerguntas(){
+    const ativas   = pqDados.filter(p => p.ativo);
+    const inativas = pqDados.filter(p => !p.ativo);
+
+    // Ativas
+    const la = document.getElementById('pqListaAtiva');
+    if(!ativas.length){
+      la.innerHTML='<div class="pq-empty">Nenhuma pergunta ativa. Adicione uma acima.</div>';
+    } else {
+      la.innerHTML = ativas.map(p => mkPqCard(p, true)).join('');
+      // Drag listeners
+      la.querySelectorAll('.pq-card[draggable]').forEach(el => {
+        el.addEventListener('dragstart', e => { pqDragId = +el.dataset.id; el.style.opacity='.35'; });
+        el.addEventListener('dragend',   e => { el.style.opacity=''; pqDragId=null; });
+        el.addEventListener('dragover',  e => { e.preventDefault(); el.style.borderColor='var(--amb)'; });
+        el.addEventListener('dragleave', e => { el.style.borderColor=''; });
+        el.addEventListener('drop',      e => { e.preventDefault(); el.style.borderColor=''; reordenarDrop(+el.dataset.id); });
+      });
+    }
+
+    // Inativas
+    const wrap = document.getElementById('pqInativasWrap');
+    const li   = document.getElementById('pqListaInativa');
+    if(!inativas.length){ wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    li.innerHTML = inativas.map(p => mkPqCard(p, false)).join('');
+  }
+
+  function mkPqCard(p, ativa){
+    const opcStr = p.opcoes ? (Array.isArray(p.opcoes) ? p.opcoes.join(', ') : JSON.stringify(p.opcoes)) : '';
+    return `<div class="pq-card${ativa?'':' inativa'}" draggable="${ativa}" data-id="${p.id}" data-ordem="${p.ordem}">
+      ${ativa ? '<span class="pq-drag" title="Arrastar para reordenar">⠿</span>' : '<span style="width:24px;display:inline-block"></span>'}
+      <span class="pq-icon">${TIPO_ICON[p.tipo]||'❓'}</span>
+      <div class="pq-info">
+        <div class="pq-label">${p.label}</div>
+        <div class="pq-meta">
+          <span class="pq-badge">${p.tipo}</span>
+          <span class="pq-badge">campo: ${p.campo}</span>
+          ${p.obrigatorio ? '<span class="pq-badge obrig">obrigatória</span>' : ''}
+          ${opcStr ? `<span class="pq-badge" title="${opcStr}">opções: ${opcStr.substring(0,40)}${opcStr.length>40?'…':''}</span>` : ''}
+        </div>
+      </div>
+      <div class="pq-actions">
+        ${ativa
+          ? `<button class="btn-pq edit" onclick="editarPergunta(${p.id})">Editar</button>
+             <button class="btn-pq del"  onclick="desativarPergunta(${p.id}, '${p.label.replace(/'/g,"\\'")}')">Desativar</button>`
+          : `<button class="btn-pq reativ" onclick="reativarPergunta(${p.id})">Reativar</button>`
+        }
+      </div>
+    </div>`;
+  }
+
+  // Reordenar via drag & drop
+  async function reordenarDrop(soltoEmId){
+    if(!pqDragId || pqDragId === soltoEmId) return;
+    const ativas = pqDados.filter(p => p.ativo);
+    const fromIdx = ativas.findIndex(p => p.id === pqDragId);
+    const toIdx   = ativas.findIndex(p => p.id === soltoEmId);
+    if(fromIdx < 0 || toIdx < 0) return;
+    const reord = [...ativas];
+    const [mov] = reord.splice(fromIdx, 1);
+    reord.splice(toIdx, 0, mov);
+    const ids = reord.map(p => p.id);
+    // Otimista — atualiza pqDados completo com nova ordem para que renderPerguntas() seja fiel
+    const inativas = pqDados.filter(p => !p.ativo);
+    reord.forEach((p, i) => { p.ordem = i + 1; });
+    pqDados = [...reord, ...inativas];
+    renderPerguntas();
+    try{
+      const r = await fetch('/api/perguntas/reordenar/lote', {
+        method: 'PUT', headers: {'Content-Type':'application/json','x-panel-password': getSenha()},
+        body: JSON.stringify({ids})
+      });
+      if(!r.ok) throw new Error();
+      toast('✓ Ordem salva.');
+    }catch{ toast('Erro ao salvar ordem.','error'); loadPerguntas(); }
+  }
+
+  // Formulário
+  function toggleFormNova(){
+    cancelarForm();
+    const f = document.getElementById('pqForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    if(f.style.display === 'block') document.getElementById('pqLabel').focus();
+  }
+
+  function editarPergunta(id){
+    const p = pqDados.find(x => x.id === id);
+    if(!p) return;
+    document.getElementById('pqEditId').value   = p.id;
+    document.getElementById('pqLabel').value    = p.label;
+    document.getElementById('pqCampo').value    = p.campo;
+    document.getElementById('pqTipo').value     = p.tipo;
+    document.getElementById('pqOrdem').value    = p.ordem;
+    document.getElementById('pqObrig').checked  = p.obrigatorio;
+    document.getElementById('pqCampo').disabled = true; // campo não deve mudar
+    if(p.opcoes){
+      const arr = Array.isArray(p.opcoes) ? p.opcoes : p.opcoes;
+      document.getElementById('pqOpcoes').value = Array.isArray(arr) ? arr.join('\n') : '';
+    }
+    toggleOpcoes();
+    document.getElementById('pqFormTitle').textContent = 'Editar Pergunta';
+    document.getElementById('pqForm').style.display = 'block';
+    document.getElementById('pqForm').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function cancelarForm(){
+    document.getElementById('pqForm').style.display = 'none';
+    document.getElementById('pqEditId').value   = '';
+    document.getElementById('pqLabel').value    = '';
+    document.getElementById('pqCampo').value    = '';
+    document.getElementById('pqCampo').disabled = false;
+    document.getElementById('pqTipo').value     = 'text';
+    document.getElementById('pqOrdem').value    = '';
+    document.getElementById('pqObrig').checked  = false;
+    document.getElementById('pqOpcoes').value   = '';
+    document.getElementById('pqFormTitle').textContent = 'Nova Pergunta';
+    toggleOpcoes();
+  }
+
+  function toggleOpcoes(){
+    const t = document.getElementById('pqTipo').value;
+    document.getElementById('pqOpcoesWrap').style.display = t === 'select' ? 'block' : 'none';
+  }
+
+  function toggleInativas(){
+    const li = document.getElementById('pqListaInativa');
+    const tg = document.getElementById('pqInativasToggle');
+    const vis = li.style.display === 'none';
+    li.style.display   = vis ? 'flex' : 'none';
+    li.style.flexDirection = 'column';
+    tg.textContent     = vis ? '▾ ocultar' : '▸ mostrar';
+  }
+
+  async function salvarPergunta(){
+    const id    = document.getElementById('pqEditId').value;
+    const label = document.getElementById('pqLabel').value.trim();
+    const campo = document.getElementById('pqCampo').value.trim();
+    const tipo  = document.getElementById('pqTipo').value;
+    const ordem = parseInt(document.getElementById('pqOrdem').value) || 99;
+    const obrig = document.getElementById('pqObrig').checked;
+    const opStr = document.getElementById('pqOpcoes').value.trim();
+    const opcoes = tipo === 'select' ? opStr.split('\n').map(s=>s.trim()).filter(Boolean) : null;
+
+    if(!label){ toast('Informe o texto da pergunta.','error'); return; }
+    if(!id && !campo){ toast('Informe o nome interno (campo).','error'); return; }
+    if(tipo === 'select' && (!opcoes||!opcoes.length)){ toast('Informe ao menos uma opção.','error'); return; }
+
+    const body = id ? {label, tipo, opcoes, obrigatorio: obrig, ordem}
+                    : {label, campo, tipo, opcoes, obrigatorio: obrig, ordem};
+    const url    = id ? `/api/perguntas/${id}` : '/api/perguntas';
+    const method = id ? 'PUT' : 'POST';
+
+    try{
+      const r = await fetch(url, {method, headers:{'Content-Type':'application/json','x-panel-password': getSenha()}, body: JSON.stringify(body)});
+      const data = await r.json();
+      if(!r.ok){ toast(data.erro || 'Erro ao salvar.','error'); return; }
+      toast(`✓ Pergunta ${id ? 'atualizada' : 'criada'} com sucesso!`);
+      cancelarForm();
+      loadPerguntas();
+    }catch{ toast('Erro de conexão.','error'); }
+  }
+
+  async function desativarPergunta(id, label){
+    if(!confirm(`Desativar "${label}"?\nEla deixará de aparecer no formulário do consultor.`)) return;
+    try{
+      const r = await fetch(`/api/perguntas/${id}`, {method:'DELETE', headers:{'x-panel-password': getSenha()}});
+      const d = await r.json();
+      if(!r.ok){ toast(d.erro||'Erro.','error'); return; }
+      toast(`✓ Pergunta desativada.`);
+      loadPerguntas();
+    }catch{ toast('Erro de conexão.','error'); }
+  }
+
+  async function reativarPergunta(id){
+    try{
+      const r = await fetch(`/api/perguntas/${id}`, {method:'PUT', headers:{'Content-Type':'application/json','x-panel-password': getSenha()}, body: JSON.stringify({ativo: true})});
+      if(!r.ok){ toast('Erro ao reativar.','error'); return; }
+      toast('✓ Pergunta reativada!');
+      loadPerguntas();
+    }catch{ toast('Erro de conexão.','error'); }
+  }
+
+  /* EXCLUIR LEAD */
+  async function deleteLead(){
+    if(!curLead)return;
+    const lead = allLeads.find(l=>l.id===curLead);
+    const nome = lead ? `"${lead.empresa_nome}"` : `#${curLead}`;
+    if(!confirm(`Tem certeza que deseja EXCLUIR permanentemente o lead ${nome}?\n\nEsta ação não pode ser desfeita.`))return;
+    try{
+      const r=await fetch(`/api/leads/${curLead}`,{method:'DELETE',headers:{'x-panel-password':getSenha()}});
+      const d=await r.json();
+      if(d.success){
+        closeModal();
+        await loadLeads();
+        await loadDashboard();
+        if(document.getElementById('view-kanban').classList.contains('active'))renderKanban();
+        toast(`🗑 Lead ${nome} excluído.`,'success');
+      } else {
+        toast(d.message||'Erro ao excluir.','error');
+      }
+    }catch{ toast('Erro de conexão.','error'); }
+  }
+
+  /* SALVAR STATUS DO LEAD */
+  async function saveStatus(){
+    if(!curLead)return;
+    const btn=document.querySelector('.btn-save');btn.disabled=true;btn.textContent='Salvando...';
+    try{
+      const st=document.getElementById('mStatus').value;
+      const r=await fetch(`/api/leads/${curLead}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:st,observacao:document.getElementById('mObs').value.trim()})});
+      if((await r.json()).success){
+        closeModal();await loadLeads();await loadDashboard();
+        if(document.getElementById('view-kanban').classList.contains('active'))renderKanban();
+        toast(`✓ Status atualizado para "${SL[st]}"`);
+      }
+    }finally{btn.disabled=false;btn.textContent='Salvar Atualização';}
+  }
+
+</script>
+</body>
+</html>

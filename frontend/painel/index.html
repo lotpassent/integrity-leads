@@ -428,7 +428,7 @@
         <div class="content-area">
 
           <div class="pq-info-box">
-            Estas perguntas aparecem no <strong>roteiro de sondagem</strong> exibido ao consultor durante a entrevista. Reordene arrastando, edite os textos ou desative as que não usar.
+            Gerencie as perguntas do sistema. Perguntas do <strong>Formulário Principal</strong> são preenchidas pelo consultor ao registrar um lead. Perguntas de <strong>Sondagem</strong> aparecem como roteiro de dicas durante a entrevista (não são preenchidas, apenas lidas).
           </div>
 
           <!-- Formulário nova/editar pergunta -->
@@ -442,10 +442,17 @@
               </div>
               <div>
                 <label class="pq-lbl">Nome interno (campo) *</label>
-                <input class="pq-input" id="pqCampo" placeholder='Ex: usa_consultoria (sem espaços)'/>
+                <input class="pq-input" id="pqCampo" placeholder='Ex: vagas_em_aberto (sem espaços)'/>
               </div>
             </div>
             <div class="pq-grid">
+              <div>
+                <label class="pq-lbl">Onde aparece *</label>
+                <select class="pq-sel" id="pqDestino">
+                  <option value="formulario">📋 Formulário principal (consultor preenche)</option>
+                  <option value="sondagem">💬 Roteiro de sondagem (dica na entrevista)</option>
+                </select>
+              </div>
               <div>
                 <label class="pq-lbl">Tipo de resposta</label>
                 <select class="pq-sel" id="pqTipo" onchange="toggleOpcoes()">
@@ -456,6 +463,8 @@
                   <option value="boolean">Sim / Não</option>
                 </select>
               </div>
+            </div>
+            <div class="pq-grid">
               <div>
                 <label class="pq-lbl">Ordem</label>
                 <input class="pq-input" id="pqOrdem" type="number" min="1" placeholder="Ex: 5"/>
@@ -922,12 +931,17 @@
 
   function mkPqCard(p, ativa){
     const opcStr = p.opcoes ? (Array.isArray(p.opcoes) ? p.opcoes.join(', ') : JSON.stringify(p.opcoes)) : '';
+    const ehSondagem = p.campo.startsWith('sondagem_');
+    const localBadge = ehSondagem
+      ? '<span class="pq-badge" style="background:rgba(212,131,42,0.15);color:var(--ambl)">💬 sondagem</span>'
+      : '<span class="pq-badge" style="background:rgba(42,107,109,0.2);color:#7ec8ca">📋 formulário</span>';
     return `<div class="pq-card${ativa?'':' inativa'}" draggable="${ativa}" data-id="${p.id}" data-ordem="${p.ordem}">
       ${ativa ? '<span class="pq-drag" title="Arrastar para reordenar">⠿</span>' : '<span style="width:24px;display:inline-block"></span>'}
       <span class="pq-icon">${TIPO_ICON[p.tipo]||'❓'}</span>
       <div class="pq-info">
         <div class="pq-label">${p.label}</div>
         <div class="pq-meta">
+          ${localBadge}
           <span class="pq-badge">${p.tipo}</span>
           <span class="pq-badge">campo: ${p.campo}</span>
           ${p.obrigatorio ? '<span class="pq-badge obrig">obrigatória</span>' : ''}
@@ -988,6 +1002,9 @@
     document.getElementById('pqOrdem').value    = p.ordem;
     document.getElementById('pqObrig').checked  = p.obrigatorio;
     document.getElementById('pqCampo').disabled = true; // campo não deve mudar
+    // Define "Onde aparece" baseado no prefixo do campo
+    document.getElementById('pqDestino').value  = p.campo.startsWith('sondagem_') ? 'sondagem' : 'formulario';
+    document.getElementById('pqDestino').disabled = true; // não muda em edição (mudaria o prefixo)
     if(p.opcoes){
       const arr = Array.isArray(p.opcoes) ? p.opcoes : p.opcoes;
       document.getElementById('pqOpcoes').value = Array.isArray(arr) ? arr.join('\n') : '';
@@ -1005,6 +1022,8 @@
     document.getElementById('pqCampo').value    = '';
     document.getElementById('pqCampo').disabled = false;
     document.getElementById('pqTipo').value     = 'text';
+    document.getElementById('pqDestino').value  = 'formulario';
+    document.getElementById('pqDestino').disabled = false;
     document.getElementById('pqOrdem').value    = '';
     document.getElementById('pqObrig').checked  = false;
     document.getElementById('pqOpcoes').value   = '';
@@ -1027,18 +1046,30 @@
   }
 
   async function salvarPergunta(){
-    const id    = document.getElementById('pqEditId').value;
-    const label = document.getElementById('pqLabel').value.trim();
-    const campo = document.getElementById('pqCampo').value.trim();
-    const tipo  = document.getElementById('pqTipo').value;
-    const ordem = parseInt(document.getElementById('pqOrdem').value) || 99;
-    const obrig = document.getElementById('pqObrig').checked;
-    const opStr = document.getElementById('pqOpcoes').value.trim();
-    const opcoes = tipo === 'select' ? opStr.split('\n').map(s=>s.trim()).filter(Boolean) : null;
+    const id      = document.getElementById('pqEditId').value;
+    const label   = document.getElementById('pqLabel').value.trim();
+    const campoRaw= document.getElementById('pqCampo').value.trim();
+    const destino = document.getElementById('pqDestino').value;
+    const tipo    = document.getElementById('pqTipo').value;
+    const ordem   = parseInt(document.getElementById('pqOrdem').value) || 99;
+    const obrig   = document.getElementById('pqObrig').checked;
+    const opStr   = document.getElementById('pqOpcoes').value.trim();
+    const opcoes  = tipo === 'select' ? opStr.split('\n').map(s=>s.trim()).filter(Boolean) : null;
 
     if(!label){ toast('Informe o texto da pergunta.','error'); return; }
-    if(!id && !campo){ toast('Informe o nome interno (campo).','error'); return; }
+    if(!id && !campoRaw){ toast('Informe o nome interno (campo).','error'); return; }
     if(tipo === 'select' && (!opcoes||!opcoes.length)){ toast('Informe ao menos uma opção.','error'); return; }
+
+    // Aplica prefixo automaticamente conforme destino (só em criação; em edição o campo não muda)
+    let campo = campoRaw;
+    if(!id) {
+      if(destino === 'sondagem' && !campoRaw.startsWith('sondagem_')) {
+        campo = `sondagem_${campoRaw}`;
+      } else if(destino === 'formulario' && campoRaw.startsWith('sondagem_')) {
+        // Remove prefixo se o usuário digitou sondagem_ mas escolheu formulário
+        campo = campoRaw.replace(/^sondagem_/, '');
+      }
+    }
 
     const body = id ? {label, tipo, opcoes, obrigatorio: obrig, ordem}
                     : {label, campo, tipo, opcoes, obrigatorio: obrig, ordem};

@@ -871,6 +871,17 @@ function irPara(idx) {
   el.classList.add('active');
   el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
 
+  // Restaura o botão de urgência selecionado visualmente ao entrar/retornar ao step
+  // (sem isso, navegar para trás e para frente apaga a seleção visual mas mantém a variável,
+  // causando confusão — o usuário vê botão sem .selected e clica de novo zerando a var)
+  if (urgenciaSelecionada) {
+    const btnUrg = el.querySelector(`.urg-btn[data-value="${urgenciaSelecionada}"]`);
+    if (btnUrg) {
+      el.querySelectorAll('.urg-btn').forEach(b => b.classList.remove('selected'));
+      btnUrg.classList.add('selected');
+    }
+  }
+
   const total = steps.length - 1;
   const pct   = Math.round((idx / steps.length) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
@@ -973,6 +984,12 @@ async function enviar() {
   const errDiv = document.getElementById('globalError');
   if (errDiv) errDiv.innerHTML = '';
   btn.disabled = true; btn.textContent = 'Enviando...';
+
+  // Segurança: se a variável global ficou vazia mas há um botão marcado no DOM, recupera o valor
+  if (!urgenciaSelecionada) {
+    const btnMarcado = document.querySelector('.urg-btn.selected');
+    if (btnMarcado) urgenciaSelecionada = btnMarcado.dataset.value;
+  }
 
   const direto = { consultor_nome: getConsultorNome() };
   const respostas_extras = [];

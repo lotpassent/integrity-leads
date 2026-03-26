@@ -248,9 +248,7 @@
     }
     .field-label .req { color: var(--amber); margin-left: 2px; }
 
-    .field-wrap {
-      position: relative;
-    }
+    .field-wrap { position: relative; }
 
     .field input,
     .field select,
@@ -293,7 +291,6 @@
     .field input::placeholder,
     .field textarea::placeholder { color: rgba(196,187,174,0.2); }
 
-    /* Select arrow personalizada */
     .field select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4832A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
@@ -302,9 +299,7 @@
       cursor: pointer;
     }
 
-    /* Indicador de preenchimento */
     .field input:not(:placeholder-shown):not(:focus),
-    .field select:not([value=""]):not(:focus),
     .field textarea:not(:placeholder-shown):not(:focus) {
       border-color: rgba(76,175,130,0.35);
     }
@@ -321,14 +316,12 @@
     }
     @media(max-width:480px) { .field-row { grid-template-columns: 1fr; } }
 
-    /* Contador de caracteres em textareas */
     .field-footer {
       display: flex; justify-content: space-between; align-items: center;
       margin-top: 0.4rem;
     }
     .char-count { font-size: 0.68rem; color: var(--cream-faint); }
 
-    /* Dica de campo */
     .field-tip {
       font-size: 0.73rem; color: rgba(212,131,42,0.5);
       margin-top: 0.35rem; display: flex; align-items: center; gap: 4px;
@@ -532,6 +525,26 @@ const CAMPO_META = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FALLBACK: perguntas padrão usadas se a API falhar ou retornar vazio
+// Garante que o formulário SEMPRE funcione independente do banco
+// ─────────────────────────────────────────────────────────────────────────────
+const PERGUNTAS_FALLBACK = [
+  { id: 1,  ordem: 10, campo: 'empresa_nome',     label: 'Nome da Empresa',          tipo: 'text',     opcoes: null,                                              obrigatorio: true  },
+  { id: 2,  ordem: 11, campo: 'empresa_setor',    label: 'Setor / Segmento',         tipo: 'text',     opcoes: null,                                              obrigatorio: false },
+  { id: 3,  ordem: 12, campo: 'empresa_porte',    label: 'Porte da Empresa',         tipo: 'select',   opcoes: ['pequena','media','grande','enterprise'],          obrigatorio: false },
+  { id: 4,  ordem: 20, campo: 'contato_nome',     label: 'Nome do Contato',          tipo: 'text',     opcoes: null,                                              obrigatorio: false },
+  { id: 5,  ordem: 21, campo: 'contato_cargo',    label: 'Cargo do Contato',         tipo: 'text',     opcoes: null,                                              obrigatorio: false },
+  { id: 6,  ordem: 22, campo: 'contato_email',    label: 'E-mail do Contato',        tipo: 'text',     opcoes: null,                                              obrigatorio: false },
+  { id: 7,  ordem: 23, campo: 'contato_telefone', label: 'Telefone do Contato',      tipo: 'text',     opcoes: null,                                              obrigatorio: false },
+  { id: 8,  ordem: 30, campo: 'cargo_em_aberto',  label: 'Vaga em Aberto (cargo)',   tipo: 'text',     opcoes: null,                                              obrigatorio: true  },
+  { id: 9,  ordem: 31, campo: 'nivel_cargo',      label: 'Nível do Cargo',           tipo: 'select',   opcoes: ['junior','pleno','senior','especialista','gerencia','diretoria','c-level'], obrigatorio: false },
+  { id: 10, ordem: 32, campo: 'quantidade_vagas', label: 'Quantidade de Vagas',      tipo: 'number',   opcoes: null,                                              obrigatorio: false },
+  { id: 11, ordem: 40, campo: 'urgencia',         label: 'Urgência da Contratação',  tipo: 'select',   opcoes: ['baixa','media','alta','critica'],                obrigatorio: true  },
+  { id: 12, ordem: 50, campo: 'contexto_entrevistado', label: 'Contexto obtido na entrevista', tipo: 'textarea', opcoes: null,                                    obrigatorio: false },
+  { id: 13, ordem: 51, campo: 'observacoes',      label: 'Observações adicionais',   tipo: 'textarea', opcoes: null,                                              obrigatorio: false },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ESTADO
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -541,17 +554,37 @@ let consultorSelecionado = '';
 let urgenciaSelecionada  = '';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INIT
+// INIT — FIX: se API falhar ou retornar vazio, usa PERGUNTAS_FALLBACK completo
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function init() {
   let perguntas = [];
   try {
     const res = await fetch('/api/perguntas');
-    const data = await res.json();
-    if (Array.isArray(data)) perguntas = data;
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        perguntas = data;
+      }
+    }
   } catch (e) {
-    console.warn('API indisponível', e);
+    console.warn('API indisponível, usando fallback:', e);
+  }
+
+  // FIX: se a API não retornou perguntas (erro, banco vazio, migration não rodou),
+  // usa o fallback completo — garante que urgencia SEMPRE aparece
+  if (perguntas.length === 0) {
+    console.warn('Usando perguntas fallback — verifique se a migration foi executada no banco.');
+    perguntas = PERGUNTAS_FALLBACK;
+  }
+
+  // FIX: garante que urgencia SEMPRE existe nas perguntas do formulário,
+  // mesmo que tenha sido acidentalmente desativada no banco
+  const temUrgencia = perguntas.some(p => p.campo === 'urgencia');
+  if (!temUrgencia) {
+    const urgenciaFallback = PERGUNTAS_FALLBACK.find(p => p.campo === 'urgencia');
+    perguntas.push(urgenciaFallback);
+    perguntas.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
   }
 
   const sondagem   = perguntas.filter(p => p.campo.startsWith(PREFIXO_SONDAGEM));
@@ -573,7 +606,7 @@ function agruparPerguntas(perguntas) {
   const grupos = {}; const ordem = [];
   perguntas.forEach(p => {
     let grupo;
-    if (p.campo.startsWith('empresa_'))  grupo = '__empresa__';
+    if (p.campo.startsWith('empresa_'))   grupo = '__empresa__';
     else if (p.campo.startsWith('contato_')) grupo = '__contato__';
     else grupo = `__solo_${p.campo}__`;
     if (!grupos[grupo]) { grupos[grupo] = []; ordem.push(grupo); }
@@ -628,12 +661,12 @@ const GRUPO_META = {
     titulo: 'Há um contato<br/>identificado?',
     hint: 'O candidato geralmente menciona o gestor ou o responsável pelas contratações.',
   },
-  __solo_cargo_em_aberto__: { badge: 'A Oportunidade', titulo: 'Qual vaga está<br/>em aberto?', hint: 'Descreva o cargo mencionado pelo candidato na entrevista.' },
-  __solo_nivel_cargo__:     { badge: 'A Oportunidade' },
-  __solo_quantidade_vagas__:{ badge: 'A Oportunidade' },
-  __solo_urgencia__:        { badge: 'Urgência', titulo: 'Qual a urgência<br/>desta oportunidade?', hint: 'Avalie com base no que o candidato transmitiu sobre a situação da empresa.' },
-  __solo_contexto_entrevistado__: { badge: 'Contexto', titulo: 'O que o candidato<br/>revelou?', hint: 'Informações qualitativas são ouro. Seja específico — qualquer detalhe pode ser decisivo.' },
-  __solo_observacoes__: { badge: 'Observações' },
+  __solo_cargo_em_aberto__:      { badge: 'A Oportunidade', titulo: 'Qual vaga está<br/>em aberto?', hint: 'Descreva o cargo mencionado pelo candidato na entrevista.' },
+  __solo_nivel_cargo__:          { badge: 'A Oportunidade' },
+  __solo_quantidade_vagas__:     { badge: 'A Oportunidade' },
+  __solo_urgencia__:             { badge: 'Urgência', titulo: 'Qual a urgência<br/>desta oportunidade?', hint: 'Avalie com base no que o candidato transmitiu sobre a situação da empresa.' },
+  __solo_contexto_entrevistado__:{ badge: 'Contexto', titulo: 'O que o candidato<br/>revelou?', hint: 'Informações qualitativas são ouro. Seja específico — qualquer detalhe pode ser decisivo.' },
+  __solo_observacoes__:          { badge: 'Observações' },
 };
 
 function getGrupoKey(perguntas) {
@@ -680,7 +713,7 @@ function renderSondagem(num, total, perguntas) {
     'Você saberia indicar quem é o responsável pelas contratações lá?',
   ];
 
-  const lista = (perguntas.length > 0 ? perguntas : FALLBACK.map((q,i) => ({ label: q, id: i })))
+  const lista = (perguntas.length > 0 ? perguntas : FALLBACK.map((q, i) => ({ label: q, id: i })))
     .map((p, i) => `
       <div class="sondagem-item">
         <div class="sondagem-num">${i + 1}</div>
@@ -711,8 +744,8 @@ function renderSondagem(num, total, perguntas) {
 }
 
 function renderGrupo(num, total, perguntas, stepIdx) {
-  const key  = getGrupoKey(perguntas);
-  const meta = GRUPO_META[key] || {};
+  const key   = getGrupoKey(perguntas);
+  const meta  = GRUPO_META[key] || {};
   const badge = meta.badge  || 'Informações';
   const titulo= meta.titulo || perguntas[0].label;
   const hint  = meta.hint   || 'Preencha com base no que o candidato relatou na entrevista.';
@@ -735,7 +768,7 @@ function renderCampo(p) {
   const req  = p.obrigatorio ? '<span class="req">*</span>' : '';
   const meta = CAMPO_META[p.campo] || {};
   const icon = meta.icon || '✏️';
-  const tip  = meta.tip  || '';
+  const tip  = p.descricao || meta.tip || '';
 
   const labelHtml = `
     <div class="field-label">
@@ -745,7 +778,8 @@ function renderCampo(p) {
 
   const tipHtml = tip ? `<div class="field-tip">${tip}</div>` : '';
 
-  // Urgência: botões visuais
+  // FIX: urgencia é sempre renderizada como botões visuais,
+  // independente do valor de p.obrigatorio no banco
   if (p.campo === 'urgencia') {
     return `
       <div class="urgencia-grid">
@@ -871,9 +905,7 @@ function irPara(idx) {
   el.classList.add('active');
   el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
 
-  // Restaura o botão de urgência selecionado visualmente ao entrar/retornar ao step
-  // (sem isso, navegar para trás e para frente apaga a seleção visual mas mantém a variável,
-  // causando confusão — o usuário vê botão sem .selected e clica de novo zerando a var)
+  // Restaura o botão de urgência selecionado visualmente ao navegar para o step
   if (urgenciaSelecionada) {
     const btnUrg = el.querySelector(`.urg-btn[data-value="${urgenciaSelecionada}"]`);
     if (btnUrg) {
@@ -894,6 +926,7 @@ function voltar()  { if (curIdx > 0) irPara(curIdx - 1); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VALIDAÇÃO
+// FIX: urgencia é sempre obrigatória no front, independente do valor no banco
 // ─────────────────────────────────────────────────────────────────────────────
 
 function mostrarErro(id, msg) {
@@ -905,31 +938,46 @@ function mostrarErro(id, msg) {
 
 function validar() {
   const step = steps[curIdx];
+
   if (step.tipo === 'identificacao') {
     if (!consultorSelecionado) { mostrarErro('err-consultor', 'Selecione seu nome.'); return false; }
     if (consultorSelecionado === 'outro') {
       const v = document.getElementById('consultor_outro')?.value.trim();
       if (!v || v.length < 2) { mostrarErro('err-consultor', 'Digite seu nome completo.'); return false; }
     }
-    mostrarErro('err-consultor', ''); return true;
+    mostrarErro('err-consultor', '');
+    return true;
   }
+
   if (step.tipo === 'sondagem') return true;
+
   if (step.tipo === 'perguntas') {
     const errId = `err-step-${curIdx}`;
+
     for (const p of step.perguntas) {
-      if (!p.obrigatorio) continue;
+      // FIX: urgencia é SEMPRE obrigatória no front — não depende de p.obrigatorio do banco
       if (p.campo === 'urgencia') {
-        if (!urgenciaSelecionada) { mostrarErro(errId, 'Selecione o grau de urgência.'); return false; }
+        if (!urgenciaSelecionada) {
+          mostrarErro(errId, 'Selecione o grau de urgência da oportunidade.');
+          return false;
+        }
         continue;
       }
+
+      // Demais campos: respeita o flag obrigatorio do banco
+      if (!p.obrigatorio) continue;
       const el = document.getElementById(`campo_${p.campo}`);
       if (el && !el.value.trim()) {
         mostrarErro(errId, `Preencha: ${p.label}`);
-        el.focus(); return false;
+        el.focus();
+        return false;
       }
     }
-    mostrarErro(errId, ''); return true;
+
+    mostrarErro(errId, '');
+    return true;
   }
+
   return true;
 }
 
@@ -958,7 +1006,7 @@ function selecionarUrgencia(btn) {
 }
 
 function atualizarContador(el) {
-  const cnt = document.getElementById(`cnt_${el.id.replace('campo_','')}`);
+  const cnt = document.getElementById(`cnt_${el.id.replace('campo_', '')}`);
   if (cnt) cnt.textContent = el.value.length + ' caracteres';
 }
 
@@ -980,12 +1028,12 @@ const CAMPOS_DIRETOS = new Set([
 ]);
 
 async function enviar() {
-  const btn = document.getElementById('btnSubmit');
+  const btn    = document.getElementById('btnSubmit');
   const errDiv = document.getElementById('globalError');
   if (errDiv) errDiv.innerHTML = '';
   btn.disabled = true; btn.textContent = 'Enviando...';
 
-  // Segurança: se a variável global ficou vazia mas há um botão marcado no DOM, recupera o valor
+  // Segurança extra: tenta recuperar urgencia do DOM se a variável global estiver vazia
   if (!urgenciaSelecionada) {
     const btnMarcado = document.querySelector('.urg-btn.selected');
     if (btnMarcado) urgenciaSelecionada = btnMarcado.dataset.value;
@@ -997,16 +1045,19 @@ async function enviar() {
   steps.forEach(step => {
     if (step.tipo !== 'perguntas') return;
     step.perguntas.forEach(p => {
-      let valor = p.campo === 'urgencia' ? urgenciaSelecionada
+      const valor = p.campo === 'urgencia'
+        ? urgenciaSelecionada
         : (document.getElementById(`campo_${p.campo}`)?.value.trim() || '');
       if (CAMPOS_DIRETOS.has(p.campo)) direto[p.campo] = valor;
       else respostas_extras.push({ campo: p.campo, label: p.label, valor });
     });
   });
 
-  if (!direto.empresa_nome)    { mostrarErroEnvio('Nome da empresa é obrigatório.', btn); return; }
-  if (!direto.cargo_em_aberto) { mostrarErroEnvio('O cargo em aberto é obrigatório.', btn); return; }
-  if (!direto.urgencia)        { mostrarErroEnvio('Selecione a urgência da oportunidade.', btn); return; }
+  // Validações finais antes de enviar
+  if (!direto.consultor_nome) { mostrarErroEnvio('Selecione o consultor responsável.', btn); return; }
+  if (!direto.empresa_nome)   { mostrarErroEnvio('Nome da empresa é obrigatório.', btn); return; }
+  if (!direto.cargo_em_aberto){ mostrarErroEnvio('O cargo em aberto é obrigatório.', btn); return; }
+  if (!direto.urgencia)       { mostrarErroEnvio('Selecione a urgência da oportunidade.', btn); return; }
 
   try {
     const res  = await fetch('/api/leads', {
@@ -1022,18 +1073,19 @@ async function enviar() {
       document.getElementById('progressFill').style.width = '100%';
       document.getElementById('stepPill').textContent = 'Concluído ✓';
 
-      const emoUrg = { baixa:'🟢', media:'🟡', alta:'🟠', critica:'🔴' };
-      const labelUrg = { baixa:'Baixa', media:'Média', alta:'Alta', critica:'Crítica' };
+      const emoUrg   = { baixa: '🟢', media: '🟡', alta: '🟠', critica: '🔴' };
+      const labelUrg = { baixa: 'Baixa', media: 'Média', alta: 'Alta', critica: 'Crítica' };
       document.getElementById('successCard').innerHTML = `
         <div class="sc-item"><div class="sc-label">Consultor</div><div class="sc-value">${direto.consultor_nome}</div></div>
         <div class="sc-item"><div class="sc-label">Empresa</div><div class="sc-value">${direto.empresa_nome}</div></div>
         ${direto.cargo_em_aberto ? `<div class="sc-item"><div class="sc-label">Vaga</div><div class="sc-value">${direto.cargo_em_aberto}</div></div>` : ''}
-        <div class="sc-item"><div class="sc-label">Urgência</div><div class="sc-value">${emoUrg[direto.urgencia]||''} ${labelUrg[direto.urgencia]||direto.urgencia}</div></div>
+        <div class="sc-item"><div class="sc-label">Urgência</div><div class="sc-value">${emoUrg[direto.urgencia] || ''} ${labelUrg[direto.urgencia] || direto.urgencia}</div></div>
         <div class="sc-item"><div class="sc-label">Lead ID</div><div class="sc-value">#${data.lead.id}</div></div>`;
     } else {
       mostrarErroEnvio(data.message || 'Erro ao registrar lead.', btn);
     }
-  } catch {
+  } catch (e) {
+    console.error(e);
     mostrarErroEnvio('Erro de conexão. Verifique se o servidor está rodando.', btn);
   }
 }
